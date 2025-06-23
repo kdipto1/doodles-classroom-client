@@ -10,7 +10,7 @@ interface Submission {
   _id: string;
   submissionText: string;
   submittedAt: string;
-  student: {
+  studentId: {
     name: string;
     email: string;
   };
@@ -39,7 +39,8 @@ function AssignmentSubmissions() {
             },
           }
         );
-        setSubmissions(res.data.submissions || []);
+        console.log(res.data);
+        setSubmissions(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast("Failed to fetch submissions");
@@ -96,58 +97,89 @@ function AssignmentSubmissions() {
   // ++++++++++++++++
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 px-4">
-      <h2 className="text-2xl font-bold mb-6">Student Submissions</h2>
-      <div className="space-y-4">
-        {submissions.map((sub) => (
-          <div key={sub._id} className="border rounded-xl p-4 shadow-sm">
-            <p className="text-sm font-semibold text-blue-700">
-              {sub.student.name} ({sub.student.email})
-            </p>
-            <p className="mt-2 whitespace-pre-wrap text-gray-800">
-              {sub.submissionText}
-            </p>
-            {typeof sub.marks === "number" ? (
-              <span className="inline-block bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">
-                Graded
-              </span>
-            ) : (
-              <span className="inline-block bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full">
-                Pending
-              </span>
-            )}
-
-            <p className="text-xs text-gray-500 mt-2">
-              Submitted: {new Date(sub.submittedAt).toLocaleString()}
-            </p>
-
-            {/* Grading UI */}
-            <div className="mt-4 space-y-2">
-              <Input
-                type="number"
-                placeholder="Marks"
-                value={grading[sub._id]?.marks || ""}
-                onChange={(e) =>
-                  handleGradeChange(sub._id, "marks", e.target.value)
-                }
-              />
-              <Textarea
-                placeholder="Feedback"
-                value={grading[sub._id]?.feedback || ""}
-                onChange={(e) =>
-                  handleGradeChange(sub._id, "feedback", e.target.value)
-                }
-              />
-
-              <button
-                className="bg-green-600 text-white px-4 py-2 rounded-md"
-                onClick={() => handleGradeSubmit(sub._id)}
-              >
-                Submit Grade
-              </button>
+    <div className="min-h-screen bg-gray-50 py-10 px-2 flex flex-col items-center">
+      <div className="w-full max-w-4xl">
+        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-8">
+          Student Submissions
+        </h2>
+        <div className="space-y-8">
+          {submissions.map((sub) => (
+            <div
+              key={sub._id}
+              className="rounded-2xl p-6 shadow-lg bg-gradient-to-br from-blue-50 to-white border border-blue-200 hover:shadow-xl transition-shadow duration-200"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
+                <p className="text-lg font-semibold text-blue-700">
+                  {sub.studentId.name}{" "}
+                  <span className="text-gray-500 text-sm">
+                    ({sub.studentId.email})
+                  </span>
+                </p>
+                {typeof sub.marks === "number" ? (
+                  <span className="inline-block bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full font-semibold mt-2 md:mt-0">
+                    Graded
+                  </span>
+                ) : (
+                  <span className="inline-block bg-yellow-100 text-yellow-700 text-xs px-3 py-1 rounded-full font-semibold mt-2 md:mt-0">
+                    Pending
+                  </span>
+                )}
+              </div>
+              <p className="mt-2 whitespace-pre-wrap text-gray-800 bg-gray-100 rounded p-3 mb-2">
+                {sub.submissionText}
+              </p>
+              <p className="text-xs text-gray-500 mb-4">
+                Submitted: {new Date(sub.submittedAt).toLocaleString()}
+              </p>
+              {/* Grading UI */}
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-white p-4 rounded-xl border border-gray-200">
+                <div>
+                  <label
+                    htmlFor={`marks-${sub._id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Marks
+                  </label>
+                  <Input
+                    id={`marks-${sub._id}`}
+                    type="number"
+                    placeholder="Marks"
+                    value={grading[sub._id]?.marks || ""}
+                    onChange={(e) =>
+                      handleGradeChange(sub._id, "marks", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor={`feedback-${sub._id}`}
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Feedback
+                  </label>
+                  <Textarea
+                    id={`feedback-${sub._id}`}
+                    placeholder="Feedback"
+                    value={grading[sub._id]?.feedback || ""}
+                    onChange={(e) =>
+                      handleGradeChange(sub._id, "feedback", e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div className="md:col-span-2 flex justify-end mt-2">
+                  <button
+                    className="bg-green-600 hover:bg-green-700 transition-colors text-white px-6 py-2 rounded-lg font-semibold shadow focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
+                    onClick={() => handleGradeSubmit(sub._id)}
+                  >
+                    Submit Grade
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

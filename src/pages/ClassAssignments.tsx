@@ -20,6 +20,8 @@ function ClassAssignments() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
 
+  console.log(classId);
+
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
@@ -31,7 +33,7 @@ function ClassAssignments() {
             },
           }
         );
-        setAssignments(res.data.assignments || []);
+        setAssignments(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast("Failed to load assignments");
@@ -46,39 +48,66 @@ function ClassAssignments() {
   }, [classId, user]);
 
   if (loading)
-    return <p className="text-center mt-6">Loading assignments...</p>;
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <span className="text-lg text-gray-500">Loading assignments...</span>
+      </div>
+    );
 
   if (assignments.length === 0) {
-    return <p className="text-center mt-6">No assignments found</p>;
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <span className="text-lg text-gray-500">No assignments found</span>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 px-4">
-      <h2 className="text-2xl font-bold mb-6">Assignments</h2>
-      <div className="space-y-4">
-        {assignments.map((assignment) => (
-          <div key={assignment._id} className="border p-4 rounded-xl shadow-sm">
-            <h3 className="text-lg font-semibold">{assignment.title}</h3>
-            <p className="text-gray-600">{assignment.instructions}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Due: {new Date(assignment.dueDate).toLocaleDateString()}
-            </p>
-            <Button
-              className="mt-2"
-              onClick={() => navigate(`/assignments/${assignment._id}/submit`)}
+    <div className="min-h-screen bg-gray-50 py-10 px-2 flex flex-col items-center">
+      <div className="w-full max-w-3xl">
+        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-8">
+          Assignments
+        </h2>
+        <div className="space-y-8">
+          {assignments.map((assignment) => (
+            <div
+              key={assignment._id}
+              className="rounded-2xl p-6 shadow-lg bg-gradient-to-br from-blue-50 to-white border border-blue-200 hover:shadow-xl transition-shadow duration-200"
             >
-              Submit
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() =>
-                navigate(`/assignments/${assignment._id}/my-submission`)
-              }
-            >
-              View My Submission
-            </Button>
-          </div>
-        ))}
+              <h3 className="text-2xl font-bold text-blue-700 mb-2">
+                {assignment.title}
+              </h3>
+              <p className="text-gray-800 mb-2 whitespace-pre-wrap">
+                {assignment.instructions}
+              </p>
+              <p className="text-sm text-gray-500 mb-4">
+                Due:{" "}
+                <span className="font-medium">
+                  {new Date(assignment.dueDate).toLocaleDateString()}
+                </span>
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    navigate(`/assignments/${assignment._id}/submit`)
+                  }
+                >
+                  Submit
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto"
+                  onClick={() =>
+                    navigate(`/assignments/${assignment._id}/my-submission`)
+                  }
+                >
+                  View My Submission
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

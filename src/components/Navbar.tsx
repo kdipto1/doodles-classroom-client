@@ -1,77 +1,165 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
 
-  return (
-    <nav className="w-full bg-white dark:bg-zinc-900 shadow px-4 py-3 flex justify-between items-center">
-      <Link to="/" className="text-xl font-semibold text-blue-600">
-        Classroom
-      </Link>
-
-      {user ? (
-        <div className="flex items-center space-x-4">
-          <span className="text-sm">
-            Hi, {user?.data.name} ({user?.data.role})
-          </span>
-
-          {user?.data.role === "teacher" && (
-            <>
-              <Link
-                to="/classes/create"
-                className="text-sm text-blue-500 hover:underline"
-              >
-                Create Class
-              </Link>
-              <Link
-                to="/classes"
-                className="text-sm text-blue-500 hover:underline"
-              >
-                My Classes
-              </Link>
-            </>
-          )}
-
-          {user.data.role === "student" && (
-            <>
-              <Link
-                to="/classes/join"
-                className="text-sm text-blue-500 hover:underline"
-              >
-                Join Class
-              </Link>
-              <Link
-                to="/classes"
-                className="text-sm text-blue-500 hover:underline"
-              >
-                My Classes
-              </Link>
-            </>
-          )}
-
-          <Button size="sm" variant="outline" onClick={handleLogout}>
-            Logout
-          </Button>
-        </div>
-      ) : (
-        <div className="space-x-2">
-          <Link to="/login" className="text-sm text-blue-500 hover:underline">
-            Login
+  // Navigation links for user roles
+  const navLinks = user ? (
+    <>
+      {user?.data.role === "teacher" && (
+        <>
+          <Link
+            to="/classes/create"
+            className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+            onClick={() => setMenuOpen(false)}
+          >
+            Create Class
           </Link>
           <Link
-            to="/register"
-            className="text-sm text-blue-500 hover:underline"
+            to="/classes"
+            className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+            onClick={() => setMenuOpen(false)}
           >
-            Register
+            My Classes
           </Link>
+        </>
+      )}
+      {user.data.role === "student" && (
+        <>
+          <Link
+            to="/classes/join"
+            className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+            onClick={() => setMenuOpen(false)}
+          >
+            Join Class
+          </Link>
+          <Link
+            to="/classes"
+            className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+            onClick={() => setMenuOpen(false)}
+          >
+            My Classes
+          </Link>
+        </>
+      )}
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() => {
+          setMenuOpen(false);
+          handleLogout();
+        }}
+        className="w-full md:w-auto mt-2 md:mt-0 border-blue-200 hover:bg-blue-50"
+      >
+        Logout
+      </Button>
+    </>
+  ) : (
+    <>
+      <Link
+        to="/login"
+        className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+        onClick={() => setMenuOpen(false)}
+      >
+        Login
+      </Link>
+      <Link
+        to="/register"
+        className="block md:inline text-sm font-medium text-blue-600 hover:bg-blue-100 px-3 py-1 rounded transition-colors"
+        onClick={() => setMenuOpen(false)}
+      >
+        Register
+      </Link>
+    </>
+  );
+
+  return (
+    <nav className="w-full bg-white dark:bg-zinc-900 shadow px-4 py-3 flex items-center sticky top-0 z-30 border-b border-gray-100">
+      <div className="flex items-center justify-between w-full">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-2xl font-extrabold text-blue-600 tracking-tight"
+        >
+          <span className="inline-block bg-blue-100 text-blue-600 rounded-full px-2 py-1 text-lg font-bold">
+            G
+          </span>
+          Classroom
+        </Link>
+        {/* Hamburger for mobile */}
+        <button
+          className="md:hidden ml-2 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onClick={() => setMenuOpen((prev) => !prev)}
+          aria-label="Toggle menu"
+        >
+          <svg
+            className="h-6 w-6 text-blue-600"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            {menuOpen ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            )}
+          </svg>
+        </button>
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center space-x-4">
+          {user && (
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
+                {user?.data.name?.[0]}
+              </span>
+              <span className="text-sm font-medium text-blue-900">
+                Hi, {user?.data.name}{" "}
+                <span className="text-xs text-gray-500">
+                  ({user?.data.role})
+                </span>
+              </span>
+            </div>
+          )}
+          {navLinks}
+        </div>
+      </div>
+      {/* Mobile nav dropdown */}
+      {menuOpen && (
+        <div className="absolute left-0 top-full w-full bg-white dark:bg-zinc-900 shadow-md border-b border-gray-100 flex flex-col items-start px-4 py-4 md:hidden animate-fade-in z-40">
+          {user && (
+            <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full mb-3">
+              <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
+                {user?.data.name?.[0]}
+              </span>
+              <span className="text-sm font-medium text-blue-900">
+                Hi, {user?.data.name}{" "}
+                <span className="text-xs text-gray-500">
+                  ({user?.data.role})
+                </span>
+              </span>
+            </div>
+          )}
+          <div className="flex flex-col w-full gap-2">{navLinks}</div>
         </div>
       )}
     </nav>

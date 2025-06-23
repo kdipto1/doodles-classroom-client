@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-// import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Navbar from "./components/Navbar";
 import CreateClass from "./pages/CreateClass";
@@ -14,6 +13,7 @@ import AssignmentSubmissions from "./pages/AssignmentSubmissions";
 import ViewMySubmission from "./pages/ViewMySubmission";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/sonner";
+import TeacherAssignments from "./pages/TeacherAssignments";
 
 function App() {
   return (
@@ -94,6 +94,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/classes/:classId/assignments/teacher"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <TeacherAssignments />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/assignments/:assignmentId/my-submission"
           element={

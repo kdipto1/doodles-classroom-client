@@ -28,7 +28,7 @@ function ViewMySubmission() {
             },
           }
         );
-        setSubmission(res.data.submission);
+        setSubmission(res.data);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast("No submission found or access denied");
@@ -42,36 +42,52 @@ function ViewMySubmission() {
     }
   }, [assignmentId, user]);
 
-  if (loading) return <p className="text-center mt-6">Loading...</p>;
+  if (loading)
+    return (
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <span className="text-lg text-gray-500">Loading...</span>
+      </div>
+    );
   if (!submission)
     return (
-      <p className="text-center mt-6">
-        You haven’t submitted this assignment yet.
-      </p>
+      <div className="min-h-[40vh] flex items-center justify-center">
+        <span className="text-lg text-gray-500">
+          You haven’t submitted this assignment yet.
+        </span>
+      </div>
     );
 
   return (
-    <div className="max-w-2xl mx-auto mt-10 p-4 border rounded-xl shadow-sm">
-      <h2 className="text-xl font-bold mb-4">My Submission</h2>
-      <p className="whitespace-pre-wrap text-gray-800 mb-2">
-        {submission.submissionText}
-      </p>
-      <p className="text-xs text-gray-500 mb-4">
-        Submitted: {new Date(submission.submittedAt).toLocaleString()}
-      </p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-2">
+      <div className="max-w-2xl w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
+        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-4">
+          My Submission
+        </h2>
+        <p className="whitespace-pre-wrap text-gray-800 bg-gray-100 rounded p-4 mb-4">
+          {submission.submissionText}
+        </p>
+        <p className="text-xs text-gray-500 mb-6 text-center">
+          Submitted: {new Date(submission.submittedAt).toLocaleString()}
+        </p>
 
-      {submission.marks !== undefined ? (
-        <>
-          <p className="text-green-700 font-semibold">
-            Marks: {submission.marks}
-          </p>
-          <p className="text-gray-700 mt-2">
-            <span className="font-medium">Feedback:</span> {submission.feedback}
-          </p>
-        </>
-      ) : (
-        <p className="text-yellow-600 font-semibold">Status: Pending Grading</p>
-      )}
+        {submission.marks !== undefined ? (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+            <p className="text-green-700 font-bold text-lg mb-2">
+              Marks: {submission.marks}
+            </p>
+            <p className="text-gray-700">
+              <span className="font-medium">Feedback:</span>{" "}
+              {submission.feedback}
+            </p>
+          </div>
+        ) : (
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center">
+            <p className="text-yellow-600 font-semibold">
+              Status: Pending Grading
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
