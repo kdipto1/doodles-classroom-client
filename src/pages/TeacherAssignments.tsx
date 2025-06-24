@@ -48,7 +48,7 @@ function TeacherAssignments() {
     return <p className="text-center mt-6">Loading assignments...</p>;
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 px-4">
+    <div className="min-h-screen max-w-3xl mx-auto mt-10 px-4">
       <h2 className="text-2xl font-bold mb-6">Assignments for this Class</h2>
       <div className="space-y-4">
         {assignments.map((assignment) => (

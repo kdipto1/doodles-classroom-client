@@ -44,7 +44,9 @@ function SubmitAssignment() {
       navigate("/classes");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      toast(err.response?.data?.message || "Submission failed");
+      toast.error(err.response?.data?.message || "Submission failed", {
+        position: "top-center",
+      });
     }
   };
 

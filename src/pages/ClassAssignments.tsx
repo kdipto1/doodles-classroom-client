@@ -10,6 +10,10 @@ interface Assignment {
   title: string;
   instructions: string;
   dueDate: string;
+  mySubmission?: {
+    submittedAt: string;
+    marks?: number;
+  };
 }
 
 function ClassAssignments() {
@@ -19,8 +23,6 @@ function ClassAssignments() {
 
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
-
-  console.log(classId);
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -80,20 +82,42 @@ function ClassAssignments() {
               <p className="text-gray-800 mb-2 whitespace-pre-wrap">
                 {assignment.instructions}
               </p>
-              <p className="text-sm text-gray-500 mb-4">
+              <p className="text-sm text-gray-500">
                 Due:{" "}
                 <span className="font-medium">
                   {new Date(assignment.dueDate).toLocaleDateString()}
                 </span>
               </p>
+
+              {/* Submission status chip */}
+              <div className="mt-2 mb-4">
+                {assignment.mySubmission ? (
+                  <>
+                    <span className="text-xs text-green-600 font-medium">
+                      Submitted
+                    </span>
+                    {assignment.mySubmission.marks !== undefined && (
+                      <span className="text-xs text-blue-600 font-medium ml-2">
+                        Graded
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <span className="text-xs text-red-600 font-medium">
+                    Not Submitted
+                  </span>
+                )}
+              </div>
+
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button
+                  disabled={!!assignment.mySubmission}
                   className="w-full sm:w-auto"
                   onClick={() =>
                     navigate(`/assignments/${assignment._id}/submit`)
                   }
                 >
-                  Submit
+                  {assignment.mySubmission ? "Submitted" : "Submit"}
                 </Button>
                 <Button
                   variant="outline"
