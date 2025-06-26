@@ -1,4 +1,4 @@
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema, type RegisterFormData } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
@@ -17,19 +17,19 @@ function Register() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
+    defaultValues: { role: "student" },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    console.log(data.role);
     try {
       const res = await axios.post(
         "http://localhost:5000/api/v1/auth/register",
         data
       );
-      console.log(res.data);
       login(res.data.data);
       navigate("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,20 +119,26 @@ function Register() {
               <Label className="mb-1 block text-sm font-medium text-gray-700">
                 Role
               </Label>
-              <RadioGroup
-                defaultValue="student"
-                {...register("role")}
-                className="flex items-center space-x-6 mt-1"
-              >
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="student" id="r1" />
-                  <Label htmlFor="r1">Student</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="teacher" id="r2" />
-                  <Label htmlFor="r2">Teacher</Label>
-                </div>
-              </RadioGroup>
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    className="flex items-center space-x-6 mt-1"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="student" id="r1" />
+                      <Label htmlFor="r1">Student</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="teacher" id="r2" />
+                      <Label htmlFor="r2">Teacher</Label>
+                    </div>
+                  </RadioGroup>
+                )}
+              />
               {errors.role && (
                 <p className="mt-2 text-sm text-red-600">
                   {errors.role.message}
