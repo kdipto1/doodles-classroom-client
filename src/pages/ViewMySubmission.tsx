@@ -24,7 +24,7 @@ function ViewMySubmission() {
           `http://localhost:5000/api/v1/submissions/my/${assignmentId}`,
           {
             headers: {
-              Authorization: `Bearer ${user?.data.accessToken}`,
+              Authorization: `Bearer ${user?.accessToken}`,
             },
           }
         );
@@ -37,7 +37,7 @@ function ViewMySubmission() {
       }
     };
 
-    if (assignmentId && user?.data.role === "student") {
+    if (assignmentId && user?.role === "student") {
       fetchSubmission();
     }
   }, [assignmentId, user]);

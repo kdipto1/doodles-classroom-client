@@ -38,7 +38,7 @@ function CreateAssignment() {
       try {
         const res = await axios.get("http://localhost:5000/api/v1/classes/my", {
           headers: {
-            Authorization: `Bearer ${user?.data.accessToken}`,
+            Authorization: `Bearer ${user?.accessToken}`,
           },
         });
         setClasses(res.data || []);
@@ -48,7 +48,7 @@ function CreateAssignment() {
       }
     };
 
-    if (user?.data.role === "teacher") {
+    if (user?.role === "teacher") {
       fetchClasses();
     }
   }, [user]);
@@ -60,7 +60,7 @@ function CreateAssignment() {
         data,
         {
           headers: {
-            Authorization: `Bearer ${user?.data.accessToken}`,
+            Authorization: `Bearer ${user?.accessToken}`,
           },
         }
       );

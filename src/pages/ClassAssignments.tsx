@@ -31,10 +31,11 @@ function ClassAssignments() {
           `http://localhost:5000/api/v1/assignments/class/${classId}`,
           {
             headers: {
-              Authorization: `Bearer ${user?.data.accessToken}`,
+              Authorization: `Bearer ${user?.accessToken}`,
             },
           }
         );
+        console.log(res.data);
         setAssignments(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
@@ -44,7 +45,7 @@ function ClassAssignments() {
       }
     };
 
-    if (user?.data.role === "student" && classId) {
+    if (user?.role === "student" && classId) {
       fetchAssignments();
     }
   }, [classId, user]);

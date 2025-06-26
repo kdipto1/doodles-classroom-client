@@ -29,7 +29,7 @@ function JoinClass() {
   const onSubmit = async (data: JoinClassForm) => {
     try {
       await axios.post("http://localhost:5000/api/v1/classes/join", data, {
-        headers: { Authorization: `Bearer ${user?.data.accessToken}` },
+        headers: { Authorization: `Bearer ${user?.accessToken}` },
       });
 
       toast("Successfully joined the class!");

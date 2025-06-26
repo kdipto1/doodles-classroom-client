@@ -26,7 +26,7 @@ function TeacherAssignments() {
           `http://localhost:5000/api/v1/assignments/class/${classId}`,
           {
             headers: {
-              Authorization: `Bearer ${user?.data.accessToken}`,
+              Authorization: `Bearer ${user?.accessToken}`,
             },
           }
         );
@@ -39,7 +39,7 @@ function TeacherAssignments() {
       }
     };
 
-    if (user?.data.role === "teacher" && classId) {
+    if (user?.role === "teacher" && classId) {
       fetchAssignments();
     }
   }, [classId, user]);

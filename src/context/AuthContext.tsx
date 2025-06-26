@@ -8,32 +8,38 @@ export interface IUser {
   token: string;
 }
 
-interface LoginResponse {
-  success: string;
-  statusCode: number;
-  message: string;
-  data: {
-    accessToken: string;
-    role: string;
-    name: string;
-  };
+// interface LoginResponse {
+//   success: string;
+//   statusCode: number;
+//   message: string;
+//   data: {
+//     accessToken: string;
+//     role: string;
+//     name: string;
+//   };
+// }
+
+interface LoginData {
+  accessToken: string;
+  role: string;
+  name: string;
 }
 
 interface AuthContextType {
-  user: LoginResponse | null;
-  login: (user: LoginResponse) => void;
+  user: LoginData | null;
+  login: (user: LoginData) => void;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<LoginResponse | null>(() => {
+  const [user, setUser] = useState<LoginData | null>(() => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
 
-  const login = (userData: LoginResponse) => {
+  const login = (userData: LoginData) => {
     localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };

@@ -14,19 +14,24 @@ interface Submission {
     name: string;
     email: string;
   };
-  marks: string;
+  marks: number | null;
+  feedback: string;
+}
+
+interface GradingState {
+  [id: string]: {
+    marks: string;
+    feedback: string;
+  };
 }
 
 function AssignmentSubmissions() {
-  const { assignmentId } = useParams();
+  const { assignmentId } = useParams<{ assignmentId: string }>();
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
-  /// ++
-  const [grading, setGrading] = useState<{
-    [id: string]: { marks: string; feedback: string };
-  }>({});
-  //++
+  const [grading, setGrading] = useState<GradingState>({});
+  const [editEnabled, setEditEnabled] = useState<{ [id: string]: boolean }>({});
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -35,11 +40,10 @@ function AssignmentSubmissions() {
           `http://localhost:5000/api/v1/submissions/assignment/${assignmentId}`,
           {
             headers: {
-              Authorization: `Bearer ${user?.data.accessToken}`,
+              Authorization: `Bearer ${user?.accessToken}`,
             },
           }
         );
-        console.log(res.data);
         setSubmissions(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
@@ -49,19 +53,10 @@ function AssignmentSubmissions() {
       }
     };
 
-    if (assignmentId && user?.data.role === "teacher") {
+    if (assignmentId && user?.role === "teacher") {
       fetchSubmissions();
     }
-  }, [assignmentId, user]);
-
-  if (loading)
-    return <p className="text-center mt-6">Loading submissions...</p>;
-
-  if (submissions.length === 0) {
-    return <p className="text-center mt-6">No submissions found</p>;
-  }
-
-  // +++++++++++++++++
+  }, [assignmentId, user, grading]);
 
   const handleGradeChange = (id: string, field: string, value: string) => {
     setGrading((prev) => ({
@@ -76,7 +71,11 @@ function AssignmentSubmissions() {
   const handleGradeSubmit = async (submissionId: string) => {
     try {
       const { marks, feedback } = grading[submissionId] || {};
-      await axios.patch(
+      if (!marks) {
+        toast("Marks are required");
+        return;
+      }
+      const res = await axios.patch(
         `http://localhost:5000/api/v1/submissions/${submissionId}/grade`,
         {
           marks: parseInt(marks),
@@ -84,17 +83,39 @@ function AssignmentSubmissions() {
         },
         {
           headers: {
-            Authorization: `Bearer ${user?.data.accessToken}`,
+            Authorization: `Bearer ${user?.accessToken}`,
           },
         }
       );
-      toast("Grade submitted!");
+      toast(res.data.message || "Grade submitted!");
+      // Optionally, refresh the submissions to reflect the changes
+      const updatedSubmissions = submissions.map((sub) =>
+        sub._id === submissionId
+          ? { ...sub, marks: parseInt(marks), feedback }
+          : sub
+      );
+      setSubmissions(updatedSubmissions);
+      setEditEnabled((prev) => ({ ...prev, [submissionId]: false }));
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       toast(err.response?.data?.message || "Failed to submit grade");
     }
   };
-  // ++++++++++++++++
+
+  const enableEdit = (submissionId: string) => {
+    setEditEnabled((prev) => ({ ...prev, [submissionId]: true }));
+  };
+
+  if (loading)
+    return <p className="text-center mt-6">Loading submissions...</p>;
+
+  if (submissions.length === 0) {
+    return (
+      <p className="min-h-screen text-center mt-6 text-red-500">
+        No submissions found
+      </p>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-10 px-2 flex flex-col items-center">
@@ -131,7 +152,6 @@ function AssignmentSubmissions() {
               <p className="text-xs text-gray-500 mb-4">
                 Submitted: {new Date(sub.submittedAt).toLocaleString()}
               </p>
-              {/* Grading UI */}
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-white p-4 rounded-xl border border-gray-200">
                 <div>
                   <label
@@ -144,11 +164,12 @@ function AssignmentSubmissions() {
                     id={`marks-${sub._id}`}
                     type="number"
                     placeholder="Marks"
-                    value={grading[sub._id]?.marks || ""}
+                    defaultValue={sub.marks || ""}
                     onChange={(e) =>
                       handleGradeChange(sub._id, "marks", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!editEnabled[sub._id] && sub.marks !== null}
                   />
                 </div>
                 <div>
@@ -161,17 +182,31 @@ function AssignmentSubmissions() {
                   <Textarea
                     id={`feedback-${sub._id}`}
                     placeholder="Feedback"
-                    value={grading[sub._id]?.feedback || ""}
+                    defaultValue={sub.feedback || ""}
                     onChange={(e) =>
                       handleGradeChange(sub._id, "feedback", e.target.value)
                     }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                    disabled={!editEnabled[sub._id] && sub.marks !== null}
                   />
                 </div>
-                <div className="md:col-span-2 flex justify-end mt-2">
+                <div className="md:col-span-2 flex justify-end mt-2 space-x-2">
+                  {sub.marks !== null && !editEnabled[sub._id] && (
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 transition-colors text-white px-6 py-2 rounded-lg font-semibold shadow focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                      onClick={() => enableEdit(sub._id)}
+                    >
+                      Enable Edit
+                    </button>
+                  )}
                   <button
-                    className="bg-green-600 hover:bg-green-700 transition-colors text-white px-6 py-2 rounded-lg font-semibold shadow focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
+                    className={`bg-green-600 hover:bg-green-700 transition-colors text-white px-6 py-2 rounded-lg font-semibold shadow focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 ${
+                      !editEnabled[sub._id] && sub.marks !== null
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                     onClick={() => handleGradeSubmit(sub._id)}
+                    disabled={!editEnabled[sub._id] && sub.marks !== null}
                   >
                     Submit Grade
                   </button>

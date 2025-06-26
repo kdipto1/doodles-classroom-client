@@ -25,7 +25,7 @@ function MyClasses() {
     try {
       const res = await axios.get("http://localhost:5000/api/v1/classes/my", {
         headers: {
-          Authorization: `Bearer ${user?.data.accessToken}`,
+          Authorization: `Bearer ${user?.accessToken}`,
         },
       });
       console.log(res.data);
@@ -84,7 +84,7 @@ function MyClasses() {
                 </span>{" "}
                 ({cls.teacher?.email})
               </p>
-              {user?.data.role === "teacher" && (
+              {user?.role === "teacher" && (
                 <p className="text-sm mt-2 text-zinc-500">
                   Class Code:{" "}
                   <span className="font-mono bg-zinc-100 px-2 py-1 rounded text-blue-800">
@@ -92,7 +92,7 @@ function MyClasses() {
                   </span>
                 </p>
               )}
-              {user?.data.role === "student" && (
+              {user?.role === "student" && (
                 <button
                   onClick={() => navigate(`/classes/${cls._id}/assignments`)}
                   className="px-6 py-3 bg-blue-600 hover:bg-blue-700 transition-colors text-white font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
@@ -100,7 +100,7 @@ function MyClasses() {
                   Class Assignments
                 </button>
               )}
-              {user?.data.role === "teacher" && (
+              {user?.role === "teacher" && (
                 <button
                   onClick={() =>
                     navigate(`/classes/${cls._id}/assignments/teacher`)

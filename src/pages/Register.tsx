@@ -23,12 +23,14 @@ function Register() {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
+    console.log(data.role);
     try {
       const res = await axios.post(
         "http://localhost:5000/api/v1/auth/register",
         data
       );
-      login(res.data);
+      console.log(res.data);
+      login(res.data.data);
       navigate("/");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

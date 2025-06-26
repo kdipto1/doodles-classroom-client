@@ -33,7 +33,7 @@ function CreateClass() {
         "http://localhost:5000/api/v1/classes/createClass",
         data,
         {
-          headers: { Authorization: `Bearer ${user?.data.accessToken}` },
+          headers: { Authorization: `Bearer ${user?.accessToken}` },
         }
       );
 

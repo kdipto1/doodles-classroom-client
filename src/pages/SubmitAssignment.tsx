@@ -35,7 +35,7 @@ function SubmitAssignment() {
         },
         {
           headers: {
-            Authorization: `Bearer ${user?.data.accessToken}`,
+            Authorization: `Bearer ${user?.accessToken}`,
           },
         }
       );

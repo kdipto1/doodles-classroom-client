@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 
   if (
     allowedRoles &&
-    !allowedRoles.includes(user.data.role as "student" | "teacher")
+    !allowedRoles.includes(user?.role as "student" | "teacher")
   ) {
     return <Navigate to="/" replace />;
   }

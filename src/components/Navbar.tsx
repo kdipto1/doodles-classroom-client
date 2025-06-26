@@ -16,7 +16,7 @@ const Navbar = () => {
   // Navigation links for user roles
   const navLinks = user ? (
     <>
-      {user?.data.role === "teacher" && (
+      {user?.role === "teacher" && (
         <>
           <Link
             to="/classes/create"
@@ -34,7 +34,7 @@ const Navbar = () => {
           </Link>
         </>
       )}
-      {user.data.role === "student" && (
+      {user?.role === "student" && (
         <>
           <Link
             to="/classes/join"
@@ -130,13 +130,11 @@ const Navbar = () => {
           {user && (
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full">
               <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
-                {user?.data.name?.[0]}
+                {user?.name[0]}
               </span>
               <span className="text-sm font-medium text-blue-900">
-                Hi, {user?.data.name}{" "}
-                <span className="text-xs text-gray-500">
-                  ({user?.data.role})
-                </span>
+                Hi, {user?.name}{" "}
+                <span className="text-xs text-gray-500">({user?.role})</span>
               </span>
             </div>
           )}
@@ -149,13 +147,11 @@ const Navbar = () => {
           {user && (
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full mb-3">
               <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
-                {user?.data.name?.[0]}
+                {user?.name}
               </span>
               <span className="text-sm font-medium text-blue-900">
-                Hi, {user?.data.name}{" "}
-                <span className="text-xs text-gray-500">
-                  ({user?.data.role})
-                </span>
+                Hi, {user?.name}{" "}
+                <span className="text-xs text-gray-500">({user?.role})</span>
               </span>
             </div>
           )}
