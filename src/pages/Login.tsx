@@ -77,20 +77,6 @@ function Login() {
               >
                 Password
               </label>
-              {/* <div className="mt-1">
-                <Input
-                  id="password"
-                  type="password"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter your password"
-                  {...register("password")}
-                />
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div> */}
               <div className="mt-1 relative">
                 <Input
                   id="password"

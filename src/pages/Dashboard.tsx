@@ -6,7 +6,6 @@ import { useNavigate } from "react-router-dom";
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  console.log(user);
 
   const [stats, setStats] = useState({
     classes: 0,

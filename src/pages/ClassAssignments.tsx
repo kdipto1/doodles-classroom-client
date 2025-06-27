@@ -35,7 +35,7 @@ function ClassAssignments() {
             },
           }
         );
-        console.log(res.data);
+
         setAssignments(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {

@@ -107,7 +107,9 @@ function AssignmentSubmissions() {
   };
 
   if (loading)
-    return <p className="text-center mt-6">Loading submissions...</p>;
+    return (
+      <p className="min-h-screen text-center mt-6">Loading submissions...</p>
+    );
 
   if (submissions.length === 0) {
     return (

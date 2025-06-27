@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Assignment {
   _id: string;
@@ -33,7 +34,7 @@ function TeacherAssignments() {
         setAssignments(res.data || []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
-        alert("Failed to load assignments");
+        toast.error("Failed to load assignments");
       } finally {
         setLoading(false);
       }

@@ -28,7 +28,6 @@ function MyClasses() {
           Authorization: `Bearer ${user?.accessToken}`,
         },
       });
-      console.log(res.data);
       setClasses(res.data || []);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars

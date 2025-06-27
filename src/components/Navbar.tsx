@@ -147,7 +147,7 @@ const Navbar = () => {
           {user && (
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full mb-3">
               <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
-                {user?.name}
+                {user?.name[0]}
               </span>
               <span className="text-sm font-medium text-blue-900">
                 Hi, {user?.name}{" "}
