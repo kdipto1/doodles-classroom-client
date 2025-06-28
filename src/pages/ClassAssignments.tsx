@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import axios from "axios";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface Assignment {
@@ -52,38 +53,38 @@ function ClassAssignments() {
 
   if (loading)
     return (
-      <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <span className="text-lg text-gray-500">Loading assignments...</span>
       </div>
     );
 
   if (assignments.length === 0) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <span className="text-lg text-gray-500">No assignments found</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-2 flex flex-col items-center">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
       <div className="w-full max-w-3xl">
-        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-8">
+        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-8">
           Assignments
         </h2>
         <div className="space-y-8">
           {assignments.map((assignment) => (
-            <div
+            <Card
               key={assignment._id}
-              className="rounded-2xl p-6 shadow-lg bg-gradient-to-br from-blue-50 to-white border border-blue-200 hover:shadow-xl transition-shadow duration-200"
+              className="p-6 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
             >
-              <h3 className="text-2xl font-bold text-blue-700 mb-2">
+              <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
                 {assignment.title}
               </h3>
-              <p className="text-gray-800 mb-2 whitespace-pre-wrap">
+              <p className="text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap">
                 {assignment.instructions}
               </p>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Due:{" "}
                 <span className="font-medium">
                   {new Date(assignment.dueDate).toLocaleDateString()}
@@ -94,17 +95,17 @@ function ClassAssignments() {
               <div className="mt-2 mb-4">
                 {assignment.mySubmission ? (
                   <>
-                    <span className="text-xs text-green-600 font-medium">
+                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">
                       Submitted
                     </span>
                     {assignment.mySubmission.marks !== undefined && (
-                      <span className="text-xs text-blue-600 font-medium ml-2">
+                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium ml-2">
                         Graded
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-xs text-red-600 font-medium">
+                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
                     Not Submitted
                   </span>
                 )}
@@ -130,7 +131,7 @@ function ClassAssignments() {
                   View My Submission
                 </Button>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       </div>

@@ -73,26 +73,26 @@ function CreateAssignment() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-2">
-      <div className="max-w-lg w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
+      <div className="max-w-lg w-full bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-700">
+        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-2">
           Create Assignment
         </h2>
-        <p className="text-center text-gray-500 mb-6">
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
           Fill in the details below to create a new assignment.
         </p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label
               htmlFor="classId"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Select Class
             </label>
             <select
               id="classId"
               {...register("classId")}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white"
+              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-gray-900 bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:text-gray-50"
             >
               <option value="">-- Choose a Class --</option>
               {classes.map((cls) => (
@@ -102,7 +102,7 @@ function CreateAssignment() {
               ))}
             </select>
             {errors.classId && (
-              <p className="mt-2 text-sm text-red-600">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.classId.message}
               </p>
             )}

@@ -51,12 +51,12 @@ function SubmitAssignment() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-10 px-2">
-      <div className="max-w-lg w-full bg-white p-8 rounded-2xl shadow-xl border border-gray-100">
-        <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
+      <div className="max-w-lg w-full bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-700">
+        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-2">
           Submit Assignment
         </h2>
-        <p className="text-center text-gray-500 mb-6">
+        <p className="text-center text-gray-500 dark:text-gray-400 mb-6">
           Enter your answer below and submit your assignment.
         </p>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

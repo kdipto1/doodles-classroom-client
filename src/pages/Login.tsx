@@ -37,13 +37,13 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-2xl shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-50">
             Welcome back!
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Please sign in to your account
           </p>
         </div>
@@ -52,19 +52,19 @@ function Login() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Email address
               </label>
               <div className="mt-1">
                 <Input
                   id="email"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your email"
                   {...register("email")}
+                  aria-invalid={errors.email ? "true" : "false"}
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-500">
                     {errors.email.message}
                   </p>
                 )}
@@ -73,7 +73,7 @@ function Login() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Password
               </label>
@@ -81,14 +81,14 @@ function Login() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm pr-10"
                   placeholder="Enter your password"
                   {...register("password")}
+                  aria-invalid={errors.password ? "true" : "false"}
                 />
                 <button
                   type="button"
                   tabIndex={-1}
-                  className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-blue-600 focus:outline-none z-50"
+                  className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-blue-600 focus:outline-none z-50 dark:text-gray-400 dark:hover:text-blue-500"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -125,7 +125,7 @@ function Login() {
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-500">
                     {errors.password.message}
                   </p>
                 )}
