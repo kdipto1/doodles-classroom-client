@@ -11,6 +11,8 @@ import ClassAssignments from "./pages/ClassAssignments";
 import SubmitAssignment from "./pages/SubmitAssignment";
 import AssignmentSubmissions from "./pages/AssignmentSubmissions";
 import ViewMySubmission from "./pages/ViewMySubmission";
+import ViewClass from "./pages/ViewClass";
+import ViewAssignment from "./pages/ViewAssignment";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/sonner";
 import TeacherAssignments from "./pages/TeacherAssignments";
@@ -66,6 +68,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <CreateAssignment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/classes/:id"
+          element={
+            <ProtectedRoute>
+              <ViewClass />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assignments/:id"
+          element={
+            <ProtectedRoute>
+              <ViewAssignment />
             </ProtectedRoute>
           }
         />

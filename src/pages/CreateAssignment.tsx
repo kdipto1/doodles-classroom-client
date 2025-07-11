@@ -5,16 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "../api/axios";
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 const schema = z.object({
   classId: z.string().min(1, "Please select a class"),
   title: z.string().min(2),
-  instructions: z.string().min(5),
-  dueDate: z.string().min(5),
+  description: z.string().optional(),
+  dueDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -28,23 +29,31 @@ function CreateAssignment() {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.state?.classId) {
+      setValue("classId", location.state.classId);
+    }
+  }, [location.state, setValue]);
+
   useEffect(() => {
     const fetchClasses = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/v1/classes/my", {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        });
+        const res = await axiosInstance.get("/classes/my");
         setClasses(res.data || []);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        toast("Failed to load classes");
+        } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          toast.error(err.response?.data?.message || "Failed to load classes");
+        } else {
+          toast.error("An unexpected error occurred while loading classes.");
+        }
       }
     };
 
@@ -55,20 +64,18 @@ function CreateAssignment() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/v1/assignments/createAssignment",
+      await axiosInstance.post(
+        "/assignments/createAssignment",
         data,
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
       );
       toast("Assignment created!");
       navigate("/classes");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast(err.response?.data?.message || "Failed to create assignment");
+      } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed to create assignment");
+      } else {
+        toast.error("An unexpected error occurred while creating assignment.");
+      }
     }
   };
 
@@ -97,7 +104,7 @@ function CreateAssignment() {
               <option value="">-- Choose a Class --</option>
               {classes.map((cls) => (
                 <option key={cls._id} value={cls._id}>
-                  {cls.name} - {cls.subject}
+                  {cls.title} - {cls.subject}
                 </option>
               ))}
             </select>
@@ -130,20 +137,20 @@ function CreateAssignment() {
 
           <div>
             <label
-              htmlFor="instructions"
+              htmlFor="description"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              Instructions
+              Description
             </label>
             <Textarea
-              id="instructions"
+              id="description"
               className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Enter instructions"
-              {...register("instructions")}
+              placeholder="Enter description"
+              {...register("description")}
             />
-            {errors.instructions && (
+            {errors.description && (
               <p className="mt-2 text-sm text-red-600">
-                {errors.instructions.message}
+                {errors.description.message}
               </p>
             )}
           </div>

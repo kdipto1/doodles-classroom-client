@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import axiosInstance from "../api/axios";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
@@ -20,18 +21,16 @@ function ViewMySubmission() {
   useEffect(() => {
     const fetchSubmission = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/submissions/my/${assignmentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
+        const res = await axiosInstance.get(
+          `/submissions/my/${assignmentId}`,
         );
         setSubmission(res.data);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        toast("No submission found or access denied");
+        } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          toast.error(err.response?.data?.message || "No submission found or access denied");
+        } else {
+          toast.error("An unexpected error occurred while fetching submission.");
+        }
       } finally {
         setLoading(false);
       }

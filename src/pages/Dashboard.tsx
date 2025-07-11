@@ -1,9 +1,11 @@
 import { useAuth } from "@/context/AuthContext";
 import { useEffect, useState } from "react";
+import axiosInstance from "../api/axios";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 function Dashboard() {
   const { user } = useAuth();
@@ -18,12 +20,19 @@ function Dashboard() {
   useEffect(() => {
     const fetchDashboardStats = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/v1/dashboard", {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        });
+        const res = await axiosInstance.get("/dashboard");
         setStats(res.data);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Dashboard error", err);
+        if (axios.isAxiosError(err)) {
+          if (err.code === 'ECONNABORTED') {
+            toast.error("Dashboard data request timed out or was aborted.");
+          } else {
+            toast.error(err?.response?.data?.message || "Failed to load dashboard data.");
+          }
+        } else {
+          toast.error("An unexpected error occurred.");
+        }
       }
     };
 
@@ -45,7 +54,9 @@ function Dashboard() {
             <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">
               {user?.role === "teacher" ? "Classes Created" : "Classes Joined"}
             </p>
-            <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">{stats?.classes}</p>
+            <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
+              {stats?.classes}
+            </p>
           </Card>
 
           <Card className="flex flex-col items-center p-6 bg-gradient-to-br from-green-100 to-green-50 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800">

@@ -1,22 +1,24 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
+
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 import { toast } from "sonner";
 
 const createClassSchema = z.object({
   title: z.string().min(2, "Class name is required"),
-  subject: z.string().min(2, "Subject is required"),
+  subject: z.string().optional(),
+  description: z.string().optional(),
 });
 
 type CreateClassForm = z.infer<typeof createClassSchema>;
 
 function CreateClass() {
-  const { user } = useAuth();
+  
   const navigate = useNavigate();
 
   const {
@@ -29,15 +31,12 @@ function CreateClass() {
 
   const onSubmit = async (data: CreateClassForm) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/classes/createClass",
+      await axiosInstance.post(
+        "/classes/createClass",
         data,
-        {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        }
       );
 
-      toast(res.data);
+      toast("Class created successfully!");
       navigate("/classes");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -90,6 +89,25 @@ function CreateClass() {
             {errors.subject && (
               <p className="mt-2 text-sm text-red-500">
                 {errors.subject.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Description
+            </label>
+            <Textarea
+              id="description"
+              placeholder="Enter description"
+              {...register("description")}
+              aria-invalid={errors.description ? "true" : "false"}
+            />
+            {errors.description && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.description.message}
               </p>
             )}
           </div>

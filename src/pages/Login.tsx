@@ -4,7 +4,7 @@ import { loginSchema, type LoginFormData } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -24,8 +24,8 @@ function Login() {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/auth/login",
+      const res = await axiosInstance.post(
+        "/auth/login",
         data
       );
       login(res.data.data);

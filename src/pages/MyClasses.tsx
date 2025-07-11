@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 
 interface ClassItem {
   _id: string;
-  name: string;
-  subject: string;
+  title: string;
+  subject?: string;
   code: string;
   teacher: {
     name: string;
@@ -25,11 +25,7 @@ function MyClasses() {
 
   const fetchClasses = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/v1/classes/my", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
+      const res = await axiosInstance.get("/classes/my");
       setClasses(res.data || []);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
@@ -42,7 +38,6 @@ function MyClasses() {
 
   useEffect(() => {
     fetchClasses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading)
@@ -73,7 +68,7 @@ function MyClasses() {
               className="p-6 bg-gradient-to-br from-blue-100 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
             >
               <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
-                {cls.name}
+                {cls.title}
               </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
                 Subject: <span className="font-medium">{cls.subject}</span>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -26,8 +26,8 @@ function Register() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/auth/register",
+      const res = await axiosInstance.post(
+        "/auth/register",
         data
       );
       toast.info(`${res.data.message}, Please login!`);
