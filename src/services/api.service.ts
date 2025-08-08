@@ -1,4 +1,5 @@
 import axiosInstance from '@/api/axios';
+import axios from 'axios';
 import { getData, getMessage } from '@/api/response';
 import type { 
   LoginFormData, 
@@ -11,14 +12,6 @@ import type {
   User
 } from '@/lib/validation';
 
-// Base API response type
-interface ApiResponse<T = unknown> {
-  success: boolean;
-  statusCode: number;
-  message: string;
-  data?: T;
-}
-
 // Base API service class
 class BaseApiService {
   protected async request<T>(
@@ -27,16 +20,38 @@ class BaseApiService {
     data?: unknown
   ): Promise<{ data: T; message: string }> {
     try {
-      const response = method === 'GET' 
-        ? await axiosInstance.get(url)
-        : await axiosInstance[method.toLowerCase() as 'post' | 'put' | 'delete' | 'patch'](url, data);
+      let response;
+      switch (method) {
+        case 'GET':
+          response = await axiosInstance.get(url);
+          break;
+        case 'DELETE':
+          response = await axiosInstance.delete(url);
+          break;
+        case 'POST':
+          response = await axiosInstance.post(url, data);
+          break;
+        case 'PUT':
+          response = await axiosInstance.put(url, data);
+          break;
+        case 'PATCH':
+          response = await axiosInstance.patch(url, data);
+          break;
+        default:
+          response = await axiosInstance.get(url);
+      }
       
       return {
         data: getData<T>(response),
         message: getMessage(response) || 'Operation completed successfully'
       };
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'An unexpected error occurred';
+    } catch (error: unknown) {
+      let errorMessage = 'An unexpected error occurred';
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || error.message || errorMessage;
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       throw new Error(errorMessage);
     }
   }
@@ -132,22 +147,22 @@ export class SubmissionService extends BaseApiService {
     submissionText?: string;
     submissionFile?: string;
   }) {
-    return this.post<any>('/submissions/submitAssignment', submissionData);
+    return this.post<unknown>('/submissions/submitAssignment', submissionData);
   }
 
   async getSubmissionsByAssignment(assignmentId: string) {
-    return this.get<any[]>(`/submissions/assignment/${assignmentId}`);
+    return this.get<unknown[]>(`/submissions/assignment/${assignmentId}`);
   }
 
   async getMySubmission(assignmentId: string) {
-    return this.get<any>(`/submissions/my/${assignmentId}`);
+    return this.get<unknown>(`/submissions/my/${assignmentId}`);
   }
 
   async gradeSubmission(submissionId: string, gradeData: {
     marks: number;
     feedback?: string;
   }) {
-    return this.patch<any>(`/submissions/${submissionId}/grade`, gradeData);
+    return this.patch<unknown>(`/submissions/${submissionId}/grade`, gradeData);
   }
 }
 

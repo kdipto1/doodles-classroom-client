@@ -8,6 +8,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { useApiMutation } from "@/hooks/useApi";
 import { authService } from "@/services/api.service";
+import { LoadingSpinner } from "@/components/Loading";
 
 function Login() {
   const { login } = useAuth();
@@ -25,6 +26,7 @@ function Login() {
   const { mutate: loginUser, loading } = useApiMutation({
     successMessage: "Login successful!",
     onSuccess: (data) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       login(data as any);
       navigate("/");
     },
@@ -60,6 +62,7 @@ function Login() {
                   placeholder="Enter your email"
                   {...register("email")}
                   aria-invalid={errors.email ? "true" : "false"}
+                  autoComplete="email"
                 />
                 {errors.email && (
                   <p className="mt-2 text-sm text-red-500">
@@ -82,6 +85,7 @@ function Login() {
                   placeholder="Enter your password"
                   {...register("password")}
                   aria-invalid={errors.password ? "true" : "false"}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
@@ -139,26 +143,7 @@ function Login() {
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <LoadingSpinner className="h-5 w-5 text-white" />
                   Signing in...
                 </>
               ) : (

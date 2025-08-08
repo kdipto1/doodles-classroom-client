@@ -5,7 +5,11 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/Loading";
-import { dashboardStatsSchema, type DashboardStats, preprocessDashboardStats } from "@/lib/validation";
+import {
+  dashboardStatsSchema,
+  type DashboardStats,
+  preprocessDashboardStats,
+} from "@/lib/validation";
 import { useApi } from "@/hooks/useApi";
 import { getData, getMessage } from "@/api/response";
 
@@ -20,16 +24,15 @@ function Dashboard() {
   } = useApi<DashboardStats>({
     responseSchema: dashboardStatsSchema,
   });
-  console.log(stats);
   useEffect(() => {
     fetchStats(async () => {
       const res = await axiosInstance.get("/dashboard");
-      console.log('Raw dashboard response:', res.data);
-      const extractedData = getData<any>(res);
-      console.log('Extracted data:', extractedData);
+      const extractedData = getData<unknown>(res);
       const preprocessedData = preprocessDashboardStats(extractedData);
-      console.log('Preprocessed data:', preprocessedData);
-      return { data: preprocessedData, message: getMessage(res) || 'Dashboard stats retrieved successfully' };
+      return {
+        data: preprocessedData,
+        message: getMessage(res) || "Dashboard stats retrieved successfully",
+      };
     });
   }, [fetchStats]);
 

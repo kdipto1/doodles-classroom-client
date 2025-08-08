@@ -64,13 +64,12 @@ function SubmitAssignment() {
           <div>
             <label
               htmlFor="submissionText"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Your Submission
             </label>
             <Textarea
               id="submissionText"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
               placeholder="Enter your submission here"
               {...register("submissionText")}
             />
