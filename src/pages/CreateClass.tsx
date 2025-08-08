@@ -1,47 +1,39 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { createClassSchema, type CreateClassFormData } from "@/lib/validation";
+import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../api/axios";
+import { getMessage } from "@/api/response";
 import { toast } from "sonner";
 
-const createClassSchema = z.object({
-  title: z.string().min(2, "Class name is required"),
-  subject: z.string().min(2, "Subject is required"),
-});
-
-type CreateClassForm = z.infer<typeof createClassSchema>;
-
 function CreateClass() {
-  const { user } = useAuth();
+  
   const navigate = useNavigate();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<CreateClassForm>({
+  } = useForm<CreateClassFormData>({
     resolver: zodResolver(createClassSchema),
   });
 
-  const onSubmit = async (data: CreateClassForm) => {
+  const onSubmit = async (data: CreateClassFormData) => {
     try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/classes/createClass",
-        data,
-        {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        }
-      );
-
-      toast(res.data);
+      const res = await axiosInstance.post("/classes/createClass", data);
+      toast.success(getMessage(res) || "Class created successfully!");
+      
       navigate("/classes");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast(err.response?.data?.message || "Class creation failed");
+    } catch (err: unknown) {
+      const errorMessage = 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (err as any).response?.data?.message || 
+        (err as Error).message || 
+        "Failed to create class. Please try again.";
+      toast.error(errorMessage);
     }
   };
 
@@ -90,6 +82,25 @@ function CreateClass() {
             {errors.subject && (
               <p className="mt-2 text-sm text-red-500">
                 {errors.subject.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Description
+            </label>
+            <Textarea
+              id="description"
+              placeholder="Enter description"
+              {...register("description")}
+              aria-invalid={errors.description ? "true" : "false"}
+            />
+            {errors.description && (
+              <p className="mt-2 text-sm text-red-500">
+                {errors.description.message}
               </p>
             )}
           </div>

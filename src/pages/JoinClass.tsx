@@ -3,8 +3,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
+
+import axiosInstance from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -15,7 +15,7 @@ const joinClassSchema = z.object({
 type JoinClassForm = z.infer<typeof joinClassSchema>;
 
 function JoinClass() {
-  const { user } = useAuth();
+  
   const navigate = useNavigate();
 
   const {
@@ -28,9 +28,7 @@ function JoinClass() {
 
   const onSubmit = async (data: JoinClassForm) => {
     try {
-      await axios.post("http://localhost:5000/api/v1/classes/join", data, {
-        headers: { Authorization: `Bearer ${user?.accessToken}` },
-      });
+      await axiosInstance.post("/classes/join", data);
 
       toast("Successfully joined the class!");
       navigate("/classes");

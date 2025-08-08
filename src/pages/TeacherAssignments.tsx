@@ -1,16 +1,17 @@
 // src/pages/TeacherAssignments.tsx
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { getData } from "@/api/response";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
 interface Assignment {
   _id: string;
   title: string;
-  instructions: string;
+  description: string;
   dueDate: string;
 }
 
@@ -24,15 +25,9 @@ function TeacherAssignments() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/assignments/class/${classId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        );
-        setAssignments(res.data || []);
+        const res = await axiosInstance.get(`/assignments/class/${classId}`);
+        const data = getData<Assignment[]>(res);
+        setAssignments(Array.isArray(data) ? data : []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast.error("Failed to load assignments");
@@ -77,7 +72,7 @@ function TeacherAssignments() {
                 {assignment.title}
               </h3>
               <p className="text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap">
-                {assignment.instructions}
+                {assignment.description}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 Due: {new Date(assignment.dueDate).toLocaleDateString()}

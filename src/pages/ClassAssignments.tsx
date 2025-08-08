@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import axiosInstance from "../api/axios";
 import axios from "axios";
+import { getData } from "@/api/response";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -9,7 +11,7 @@ import { toast } from "sonner";
 interface Assignment {
   _id: string;
   title: string;
-  instructions: string;
+  description: string;
   dueDate: string;
   mySubmission?: {
     submittedAt: string;
@@ -28,19 +30,19 @@ function ClassAssignments() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/assignments/class/${classId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
-        );
-
-        setAssignments(res.data || []);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        toast("Failed to load assignments");
+        const res = await axiosInstance.get(`/assignments/class/${classId}`);
+        const data = getData<Assignment[]>(res);
+        setAssignments(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          toast.error(
+            err.response?.data?.message || "Failed to load assignments"
+          );
+        } else {
+          toast.error(
+            "An unexpected error occurred while loading assignments."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -82,7 +84,7 @@ function ClassAssignments() {
                 {assignment.title}
               </h3>
               <p className="text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap">
-                {assignment.instructions}
+                {assignment.description}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Due:{" "}

@@ -1,61 +1,64 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
+import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
+import { EmptyState } from "@/components/EmptyState";
+import { useApi } from "@/hooks/useApi";
+import type { Class } from "@/lib/validation";
+import { classSchema } from "@/lib/validation";
+import { BookOpen } from "lucide-react";
+import { z } from "zod";
+import { getData, getMessage } from "@/api/response";
 
-interface ClassItem {
-  _id: string;
-  name: string;
-  subject: string;
-  code: string;
-  teacher: {
-    name: string;
-    email: string;
-  };
-}
+const classesArraySchema = z.array(classSchema);
 
 function MyClasses() {
   const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchClasses = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/v1/classes/my", {
-        headers: {
-          Authorization: `Bearer ${user?.accessToken}`,
-        },
-      });
-      setClasses(res.data || []);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    } catch (err: any) {
-      toast("Failed to load classes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: classes,
+    loading,
+    execute: fetchClasses,
+  } = useApi<Class[]>({
+    responseSchema: classesArraySchema,
+  });
 
   useEffect(() => {
-    fetchClasses();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    fetchClasses(async () => {
+      const res = await axiosInstance.get("/classes/my");
+      return { data: getData<Class[]>(res), message: getMessage(res) || 'Classes retrieved successfully' };
+    });
+  }, [fetchClasses]);
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">Loading classes...</span>
-      </div>
-    );
+  if (loading) {
+    return <Loading message="Loading your classes..." fullScreen />;
+  }
 
-  if (classes.length === 0) {
+  if (!classes || classes.length === 0) {
+    const actionLabel =
+      user?.role === "teacher" ? "Create Class" : "Join Class";
+    const actionPath =
+      user?.role === "teacher" ? "/classes/create" : "/classes/join";
+
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">No classes found</span>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          icon={<BookOpen className="h-8 w-8 text-gray-400" />}
+          title="No classes found"
+          description={
+            user?.role === "teacher"
+              ? "You haven't created any classes yet. Create your first class to get started."
+              : "You haven't joined any classes yet. Join a class using a class code to get started."
+          }
+          action={{
+            label: actionLabel,
+            onClick: () => navigate(actionPath),
+          }}
+        />
       </div>
     );
   }
@@ -73,7 +76,7 @@ function MyClasses() {
               className="p-6 bg-gradient-to-br from-blue-100 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
             >
               <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
-                {cls.name}
+                {cls.title}
               </h3>
               <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">
                 Subject: <span className="font-medium">{cls.subject}</span>

@@ -11,26 +11,32 @@ import ClassAssignments from "./pages/ClassAssignments";
 import SubmitAssignment from "./pages/SubmitAssignment";
 import AssignmentSubmissions from "./pages/AssignmentSubmissions";
 import ViewMySubmission from "./pages/ViewMySubmission";
+import ViewClass from "./pages/ViewClass";
+import ViewAssignment from "./pages/ViewAssignment";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/sonner";
 import TeacherAssignments from "./pages/TeacherAssignments";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ErrorBoundary>
+                  <Dashboard />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
         {/* 👨‍🏫 Teacher routes */}
         <Route
@@ -66,6 +72,22 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <CreateAssignment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/classes/:id"
+          element={
+            <ProtectedRoute>
+              <ViewClass />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assignments/:id"
+          element={
+            <ProtectedRoute>
+              <ViewAssignment />
             </ProtectedRoute>
           }
         />
@@ -114,6 +136,7 @@ function App() {
       </Routes>
       <Toaster />
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

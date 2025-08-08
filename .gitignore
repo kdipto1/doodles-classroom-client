@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 repomix-output.xml
-repomix-client-output.txt
+repomix-client-code-output.txt
+repomix-server-code-output.xml
 .env
 GEMINI.md
+DEVELOPMENT-plan.md

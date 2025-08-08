@@ -1,6 +1,8 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import axiosInstance from "../api/axios";
 import axios from "axios";
+import { getData } from "@/api/response";
 import { useAuth } from "@/context/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -38,18 +40,21 @@ function AssignmentSubmissions() {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const res = await axios.get(
-          `http://localhost:5000/api/v1/submissions/assignment/${assignmentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${user?.accessToken}`,
-            },
-          }
+        const res = await axiosInstance.get(
+          `/submissions/assignment/${assignmentId}`
         );
-        setSubmissions(res.data || []);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (err) {
-        toast("Failed to fetch submissions");
+        const data = getData<Submission[]>(res);
+        setSubmissions(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          toast.error(
+            err?.response?.data?.message || "Failed to fetch submissions"
+          );
+        } else {
+          toast.error(
+            "An unexpected error occurred while fetching submissions."
+          );
+        }
       } finally {
         setLoading(false);
       }
@@ -77,16 +82,11 @@ function AssignmentSubmissions() {
         toast("Marks are required");
         return;
       }
-      const res = await axios.patch(
-        `http://localhost:5000/api/v1/submissions/${submissionId}/grade`,
+      const res = await axiosInstance.patch(
+        `/submissions/${submissionId}/grade`,
         {
           marks: parseInt(marks),
           feedback,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
         }
       );
       toast(res.data.message || "Grade submitted!");
@@ -98,9 +98,12 @@ function AssignmentSubmissions() {
       );
       setSubmissions(updatedSubmissions);
       setEditEnabled((prev) => ({ ...prev, [submissionId]: false }));
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast(err.response?.data?.message || "Failed to submit grade");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Failed to submit grade");
+      } else {
+        toast.error("An unexpected error occurred while submitting grade.");
+      }
     }
   };
 

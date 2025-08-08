@@ -1,34 +1,41 @@
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect } from "react";
+import axiosInstance from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Loading } from "@/components/Loading";
+import { dashboardStatsSchema, type DashboardStats, preprocessDashboardStats } from "@/lib/validation";
+import { useApi } from "@/hooks/useApi";
+import { getData, getMessage } from "@/api/response";
 
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({
-    classes: 0,
-    assignments: 0,
-    upcoming: 0,
+  const {
+    data: stats,
+    loading,
+    execute: fetchStats,
+  } = useApi<DashboardStats>({
+    responseSchema: dashboardStatsSchema,
   });
-
+  console.log(stats);
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/v1/dashboard", {
-          headers: { Authorization: `Bearer ${user?.accessToken}` },
-        });
-        setStats(res.data);
-      } catch (err) {
-        console.error("Dashboard error", err);
-      }
-    };
+    fetchStats(async () => {
+      const res = await axiosInstance.get("/dashboard");
+      console.log('Raw dashboard response:', res.data);
+      const extractedData = getData<any>(res);
+      console.log('Extracted data:', extractedData);
+      const preprocessedData = preprocessDashboardStats(extractedData);
+      console.log('Preprocessed data:', preprocessedData);
+      return { data: preprocessedData, message: getMessage(res) || 'Dashboard stats retrieved successfully' };
+    });
+  }, [fetchStats]);
 
-    fetchDashboardStats();
-  }, [user]);
+  if (loading) {
+    return <Loading message="Loading dashboard data..." fullScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
@@ -45,7 +52,9 @@ function Dashboard() {
             <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">
               {user?.role === "teacher" ? "Classes Created" : "Classes Joined"}
             </p>
-            <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">{stats?.classes}</p>
+            <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
+              {stats?.classes ?? 0}
+            </p>
           </Card>
 
           <Card className="flex flex-col items-center p-6 bg-gradient-to-br from-green-100 to-green-50 dark:from-green-950 dark:to-green-900 border border-green-200 dark:border-green-800">
@@ -55,7 +64,7 @@ function Dashboard() {
                 : "Assignments Received"}
             </p>
             <p className="text-4xl font-bold text-green-900 dark:text-green-100">
-              {stats?.assignments}
+              {stats?.assignments ?? 0}
             </p>
           </Card>
 
@@ -64,7 +73,7 @@ function Dashboard() {
               Upcoming Due
             </p>
             <p className="text-4xl font-bold text-yellow-900 dark:text-yellow-100">
-              {stats?.upcoming}
+              {stats?.upcoming ?? 0}
             </p>
           </Card>
         </div>

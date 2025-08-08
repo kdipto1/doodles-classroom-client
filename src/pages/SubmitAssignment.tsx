@@ -2,21 +2,22 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useParams, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+
+import axiosInstance from "../api/axios";
 import axios from "axios";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
 const schema = z.object({
-  submissionText: z.string().min(10, "Minimum 10 characters"),
+  submissionText: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
 
 function SubmitAssignment() {
   const { assignmentId } = useParams();
-  const { user } = useAuth();
+  
   const navigate = useNavigate();
 
   const {
@@ -27,26 +28,26 @@ function SubmitAssignment() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await axios.post(
-        "http://localhost:5000/api/v1/submissions/submitAssignment",
+      await axiosInstance.post(
+        "/submissions/submitAssignment",
         {
           assignmentId,
           submissionText: data.submissionText,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        }
       );
 
       toast("Submission successful!");
       navigate("/classes");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Submission failed", {
-        position: "top-center",
-      });
+      } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        toast.error(err.response?.data?.message || "Submission failed", {
+          position: "top-center",
+        });
+      } else {
+        toast.error("An unexpected error occurred during submission.", {
+          position: "top-center",
+        });
+      }
     }
   };
 

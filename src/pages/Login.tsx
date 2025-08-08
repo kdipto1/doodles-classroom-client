@@ -4,10 +4,10 @@ import { loginSchema, type LoginFormData } from "@/lib/validation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
-import { toast } from "sonner";
 import { useState } from "react";
+import { useApiMutation } from "@/hooks/useApi";
+import { authService } from "@/services/api.service";
 
 function Login() {
   const { login } = useAuth();
@@ -17,23 +17,21 @@ function Login() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      const res = await axios.post(
-        "http://localhost:5000/api/v1/auth/login",
-        data
-      );
-      login(res.data.data);
+  const { mutate: loginUser, loading } = useApiMutation({
+    successMessage: "Login successful!",
+    onSuccess: (data) => {
+      login(data as any);
       navigate("/");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast(err.response?.data?.message || "Login failed");
-    }
+    },
+  });
+
+  const onSubmit = async (data: LoginFormData) => {
+    await loginUser(() => authService.login(data));
   };
 
   return (
@@ -136,10 +134,10 @@ function Login() {
           <div>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={loading}
               className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (
+              {loading ? (
                 <>
                   <svg
                     className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
