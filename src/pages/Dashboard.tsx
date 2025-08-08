@@ -1,43 +1,41 @@
 import { useAuth } from "@/context/AuthContext";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import axiosInstance from "../api/axios";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
+import { Loading } from "@/components/Loading";
+import { dashboardStatsSchema, type DashboardStats, preprocessDashboardStats } from "@/lib/validation";
+import { useApi } from "@/hooks/useApi";
+import { getData, getMessage } from "@/api/response";
 
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const [stats, setStats] = useState({
-    classes: 0,
-    assignments: 0,
-    upcoming: 0,
+  const {
+    data: stats,
+    loading,
+    execute: fetchStats,
+  } = useApi<DashboardStats>({
+    responseSchema: dashboardStatsSchema,
   });
-
+  console.log(stats);
   useEffect(() => {
-    const fetchDashboardStats = async () => {
-      try {
-        const res = await axiosInstance.get("/dashboard");
-        setStats(res.data);
-      } catch (err: unknown) {
-        console.error("Dashboard error", err);
-        if (axios.isAxiosError(err)) {
-          if (err.code === 'ECONNABORTED') {
-            toast.error("Dashboard data request timed out or was aborted.");
-          } else {
-            toast.error(err?.response?.data?.message || "Failed to load dashboard data.");
-          }
-        } else {
-          toast.error("An unexpected error occurred.");
-        }
-      }
-    };
+    fetchStats(async () => {
+      const res = await axiosInstance.get("/dashboard");
+      console.log('Raw dashboard response:', res.data);
+      const extractedData = getData<any>(res);
+      console.log('Extracted data:', extractedData);
+      const preprocessedData = preprocessDashboardStats(extractedData);
+      console.log('Preprocessed data:', preprocessedData);
+      return { data: preprocessedData, message: getMessage(res) || 'Dashboard stats retrieved successfully' };
+    });
+  }, [fetchStats]);
 
-    fetchDashboardStats();
-  }, [user]);
+  if (loading) {
+    return <Loading message="Loading dashboard data..." fullScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
@@ -55,7 +53,7 @@ function Dashboard() {
               {user?.role === "teacher" ? "Classes Created" : "Classes Joined"}
             </p>
             <p className="text-4xl font-bold text-blue-900 dark:text-blue-100">
-              {stats?.classes}
+              {stats?.classes ?? 0}
             </p>
           </Card>
 
@@ -66,7 +64,7 @@ function Dashboard() {
                 : "Assignments Received"}
             </p>
             <p className="text-4xl font-bold text-green-900 dark:text-green-100">
-              {stats?.assignments}
+              {stats?.assignments ?? 0}
             </p>
           </Card>
 
@@ -75,7 +73,7 @@ function Dashboard() {
               Upcoming Due
             </p>
             <p className="text-4xl font-bold text-yellow-900 dark:text-yellow-100">
-              {stats?.upcoming}
+              {stats?.upcoming ?? 0}
             </p>
           </Card>
         </div>

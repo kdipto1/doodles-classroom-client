@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
+import { getData } from "@/api/response";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 
@@ -24,10 +25,9 @@ function TeacherAssignments() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const res = await axiosInstance.get(
-          `/assignments/class/${classId}`,
-        );
-        setAssignments(res.data || []);
+        const res = await axiosInstance.get(`/assignments/class/${classId}`);
+        const data = getData<Assignment[]>(res);
+        setAssignments(Array.isArray(data) ? data : []);
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (err) {
         toast.error("Failed to load assignments");

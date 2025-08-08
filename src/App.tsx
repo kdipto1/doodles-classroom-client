@@ -16,23 +16,27 @@ import ViewAssignment from "./pages/ViewAssignment";
 import Dashboard from "./pages/Dashboard";
 import { Toaster } from "./components/ui/sonner";
 import TeacherAssignments from "./pages/TeacherAssignments";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Navbar />
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Navbar />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <ErrorBoundary>
+                  <Dashboard />
+                </ErrorBoundary>
+              </ProtectedRoute>
+            }
+          />
 
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
 
         {/* 👨‍🏫 Teacher routes */}
         <Route
@@ -132,6 +136,7 @@ function App() {
       </Routes>
       <Toaster />
     </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

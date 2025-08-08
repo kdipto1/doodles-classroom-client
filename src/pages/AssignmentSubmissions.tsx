@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../api/axios";
 import axios from "axios";
+import { getData } from "@/api/response";
 import { useAuth } from "@/context/AuthContext";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -40,14 +41,19 @@ function AssignmentSubmissions() {
     const fetchSubmissions = async () => {
       try {
         const res = await axiosInstance.get(
-          `/submissions/assignment/${assignmentId}`,
+          `/submissions/assignment/${assignmentId}`
         );
-        setSubmissions(res.data || []);
-        } catch (err: unknown) {
+        const data = getData<Submission[]>(res);
+        setSubmissions(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
-          toast.error(err.response?.data?.message || "Failed to fetch submissions");
+          toast.error(
+            err?.response?.data?.message || "Failed to fetch submissions"
+          );
         } else {
-          toast.error("An unexpected error occurred while fetching submissions.");
+          toast.error(
+            "An unexpected error occurred while fetching submissions."
+          );
         }
       } finally {
         setLoading(false);
@@ -81,7 +87,7 @@ function AssignmentSubmissions() {
         {
           marks: parseInt(marks),
           feedback,
-        },
+        }
       );
       toast(res.data.message || "Grade submitted!");
       // Optionally, refresh the submissions to reflect the changes
@@ -92,7 +98,7 @@ function AssignmentSubmissions() {
       );
       setSubmissions(updatedSubmissions);
       setEditEnabled((prev) => ({ ...prev, [submissionId]: false }));
-      } catch (err: unknown) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
         toast.error(err.response?.data?.message || "Failed to submit grade");
       } else {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "../api/axios";
+import { getData } from "@/api/response";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -47,8 +48,9 @@ function CreateAssignment() {
     const fetchClasses = async () => {
       try {
         const res = await axiosInstance.get("/classes/my");
-        setClasses(res.data || []);
-        } catch (err: unknown) {
+        const data = getData<any[]>(res);
+        setClasses(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           toast.error(err.response?.data?.message || "Failed to load classes");
         } else {
@@ -64,15 +66,14 @@ function CreateAssignment() {
 
   const onSubmit = async (data: FormData) => {
     try {
-      await axiosInstance.post(
-        "/assignments/createAssignment",
-        data,
-      );
+      await axiosInstance.post("/assignments/createAssignment", data);
       toast("Assignment created!");
       navigate("/classes");
-      } catch (err: unknown) {
+    } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Failed to create assignment");
+        toast.error(
+          err.response?.data?.message || "Failed to create assignment"
+        );
       } else {
         toast.error("An unexpected error occurred while creating assignment.");
       }

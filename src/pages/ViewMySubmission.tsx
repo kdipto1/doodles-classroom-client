@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axiosInstance from "../api/axios";
 import axios from "axios";
+import { getData } from "@/api/response";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
@@ -24,7 +25,7 @@ function ViewMySubmission() {
         const res = await axiosInstance.get(
           `/submissions/my/${assignmentId}`,
         );
-        setSubmission(res.data);
+        setSubmission(getData<Submission | null>(res));
         } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           toast.error(err.response?.data?.message || "No submission found or access denied");

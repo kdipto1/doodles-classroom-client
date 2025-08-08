@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
 import axiosInstance from "../api/axios";
-import axios from "axios";
+import { getData } from "@/api/response";
+// import { apiResponseSchema } from "../lib/validation";
 
 export interface IUser {
   _id: string;
@@ -16,6 +17,7 @@ interface LoginData {
   refreshToken: string;
   role: "teacher" | "student";
   name: string;
+  email?: string;
 }
 
 interface AuthContextType {
@@ -23,6 +25,7 @@ interface AuthContextType {
   login: (user: LoginData) => void;
   logout: () => void;
   getMe: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const login = (userData: LoginData) => {
     localStorage.setItem("user", JSON.stringify(userData));
@@ -44,40 +48,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const getMe = useCallback(async () => {
+    if (!user?.accessToken) return;
+    
     try {
-      const response = await axiosInstance.post("/auth/me");
-      const fetchedUser = response.data;
-      if (fetchedUser) {
+      setIsLoading(true);
+      const response = await axiosInstance.get("/auth/me");
+      const userData = getData(response);
+      
+      if (userData) {
         // Update the user in local storage and state with the fetched data
         const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const updatedUser = { ...currentUser, ...fetchedUser, accessToken: currentUser.accessToken, refreshToken: currentUser.refreshToken };
+        const updatedUser = { 
+          ...currentUser, 
+          ...userData, 
+          accessToken: currentUser.accessToken, 
+          refreshToken: currentUser.refreshToken 
+        };
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
       }
     } catch (error: unknown) {
-      if (axios.isAxiosError(error)) {
-        if (error.code === 'ECONNABORTED') {
-          console.error("Failed to fetch user data: Request timed out or aborted.", error);
-        } else {
-          console.error("Failed to fetch user data:", error.response?.data?.message || error.message);
-        }
-      } else {
-        console.error("Failed to fetch user data: An unexpected error occurred.", error);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      console.error("Failed to fetch user data:", (error as any).response?.data?.message || (error as Error).message);
+      
+      // Only logout if it's an authentication error
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if ((error as any).response?.status === 401 || (error as any).response?.status === 403) {
+        logout();
       }
-      // If fetching user data fails, it might mean the token is invalid
-      // or expired, so log out the user.
-      logout();
+    } finally {
+      setIsLoading(false);
     }
-  }, [logout, setUser]);
+  }, [user?.accessToken, logout]);
 
   useEffect(() => {
     if (user && user.accessToken) {
       getMe();
     }
-  }, [getMe]);
+  }, []); // Remove getMe from dependencies to prevent infinite loop
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, getMe }}>
+    <AuthContext.Provider value={{ user, login, logout, getMe, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

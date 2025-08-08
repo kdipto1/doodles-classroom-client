@@ -1,56 +1,64 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
-import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Loading } from "@/components/Loading";
+import { EmptyState } from "@/components/EmptyState";
+import { useApi } from "@/hooks/useApi";
+import type { Class } from "@/lib/validation";
+import { classSchema } from "@/lib/validation";
+import { BookOpen } from "lucide-react";
+import { z } from "zod";
+import { getData, getMessage } from "@/api/response";
 
-interface ClassItem {
-  _id: string;
-  title: string;
-  subject?: string;
-  code: string;
-  teacher: {
-    name: string;
-    email: string;
-  };
-}
+const classesArraySchema = z.array(classSchema);
 
 function MyClasses() {
   const { user } = useAuth();
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const fetchClasses = async () => {
-    try {
-      const res = await axiosInstance.get("/classes/my");
-      setClasses(res.data || []);
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-    } catch (err: any) {
-      toast("Failed to load classes");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: classes,
+    loading,
+    execute: fetchClasses,
+  } = useApi<Class[]>({
+    responseSchema: classesArraySchema,
+  });
 
   useEffect(() => {
-    fetchClasses();
-  }, []);
+    fetchClasses(async () => {
+      const res = await axiosInstance.get("/classes/my");
+      return { data: getData<Class[]>(res), message: getMessage(res) || 'Classes retrieved successfully' };
+    });
+  }, [fetchClasses]);
 
-  if (loading)
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">Loading classes...</span>
-      </div>
-    );
+  if (loading) {
+    return <Loading message="Loading your classes..." fullScreen />;
+  }
 
-  if (classes.length === 0) {
+  if (!classes || classes.length === 0) {
+    const actionLabel =
+      user?.role === "teacher" ? "Create Class" : "Join Class";
+    const actionPath =
+      user?.role === "teacher" ? "/classes/create" : "/classes/join";
+
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">No classes found</span>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          icon={<BookOpen className="h-8 w-8 text-gray-400" />}
+          title="No classes found"
+          description={
+            user?.role === "teacher"
+              ? "You haven't created any classes yet. Create your first class to get started."
+              : "You haven't joined any classes yet. Join a class using a class code to get started."
+          }
+          action={{
+            label: actionLabel,
+            onClick: () => navigate(actionPath),
+          }}
+        />
       </div>
     );
   }

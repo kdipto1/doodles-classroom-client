@@ -23,7 +23,11 @@ axiosInstance.interceptors.request.use(
 
 // Response interceptor for token refresh
 axiosInstance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // If the response follows the backend format { success, message, data },
+    // we'll leave it as is - the useApi hook will handle validation
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 
@@ -32,18 +36,18 @@ axiosInstance.interceptors.response.use(
       originalRequest._retry = true; // Mark request as retried
 
       try {
-        const refreshToken = JSON.parse(localStorage.getItem('user') || '{}').refreshToken;
-        if (!refreshToken) {
-          // No refresh token, redirect to login
-          window.location.href = '/login';
-          return Promise.reject(error);
-        }
 
         const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {}, {
           withCredentials: true,
         });
 
-        const { accessToken } = refreshResponse.data;
+        // Handle both old and new response formats during transition
+        let accessToken;
+        if (refreshResponse.data.success) {
+          accessToken = refreshResponse.data.data.accessToken;
+        } else {
+          accessToken = refreshResponse.data.accessToken;
+        }
 
         // Update tokens in localStorage
         const user = JSON.parse(localStorage.getItem('user') || '{}');

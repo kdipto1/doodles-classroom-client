@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import axiosInstance from "../api/axios";
 import axios from "axios";
+import { getData } from "@/api/response";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -29,16 +30,18 @@ function ClassAssignments() {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const res = await axiosInstance.get(
-          `/assignments/class/${classId}`,
-        );
-
-        setAssignments(res.data || []);
-        } catch (err: unknown) {
+        const res = await axiosInstance.get(`/assignments/class/${classId}`);
+        const data = getData<Assignment[]>(res);
+        setAssignments(Array.isArray(data) ? data : []);
+      } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
-          toast.error(err.response?.data?.message || "Failed to load assignments");
+          toast.error(
+            err.response?.data?.message || "Failed to load assignments"
+          );
         } else {
-          toast.error("An unexpected error occurred while loading assignments.");
+          toast.error(
+            "An unexpected error occurred while loading assignments."
+          );
         }
       } finally {
         setLoading(false);

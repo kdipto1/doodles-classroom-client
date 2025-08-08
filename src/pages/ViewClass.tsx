@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axiosInstance from '../api/axios';
 import axios from 'axios';
+import { getData } from '@/api/response';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
@@ -37,10 +38,11 @@ const ViewClass = () => {
       try {
         setLoading(true);
         const classResponse = await axiosInstance.get(`/classes/${id}`);
-        setClassroom(classResponse.data);
+        setClassroom(getData<IClassroom>(classResponse));
 
         const assignmentsResponse = await axiosInstance.get(`/assignments/class/${id}`);
-        setAssignments(assignmentsResponse.data);
+        const data = getData<IAssignment[]>(assignmentsResponse);
+        setAssignments(Array.isArray(data) ? data : []);
 
       } catch (err: unknown) {
         console.error('Error fetching class details:', err);
