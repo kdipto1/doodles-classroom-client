@@ -80,11 +80,22 @@ export const dashboardStatsSchema = z.object({
 });
 
 // Helper function to preprocess dashboard stats
-export const preprocessDashboardStats = (data: any): { classes: number; assignments: number; upcoming: number } => {
+export const preprocessDashboardStats = (
+  data: unknown
+): { classes: number; assignments: number; upcoming: number } => {
   return {
-    classes: typeof data?.classes === 'number' ? data.classes : 0,
-    assignments: typeof data?.assignments === 'number' ? data.assignments : 0,
-    upcoming: typeof data?.upcoming === 'number' ? data.upcoming : 0,
+    classes:
+      typeof (data as { classes?: unknown })?.classes === "number"
+        ? (data as { classes: number }).classes
+        : 0,
+    assignments:
+      typeof (data as { assignments?: unknown })?.assignments === "number"
+        ? (data as { assignments: number }).assignments
+        : 0,
+    upcoming:
+      typeof (data as { upcoming?: unknown })?.upcoming === "number"
+        ? (data as { upcoming: number }).upcoming
+        : 0,
   };
 };
 

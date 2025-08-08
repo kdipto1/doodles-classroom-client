@@ -15,7 +15,6 @@ const joinClassSchema = z.object({
 type JoinClassForm = z.infer<typeof joinClassSchema>;
 
 function JoinClass() {
-  
   const navigate = useNavigate();
 
   const {
@@ -51,13 +50,12 @@ function JoinClass() {
           <div>
             <label
               htmlFor="classCode"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               Class Code
             </label>
             <Input
               id="classCode"
-              className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-400 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
               placeholder="Enter class code"
               {...register("code")}
             />

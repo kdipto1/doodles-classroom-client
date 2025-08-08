@@ -1,28 +1,32 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import { Suspense, lazy } from "react";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import Navbar from "./components/Navbar";
-import CreateClass from "./pages/CreateClass";
-import JoinClass from "./pages/JoinClass";
-import MyClasses from "./pages/MyClasses";
-import CreateAssignment from "./pages/CreateAssignment";
-import ClassAssignments from "./pages/ClassAssignments";
-import SubmitAssignment from "./pages/SubmitAssignment";
-import AssignmentSubmissions from "./pages/AssignmentSubmissions";
-import ViewMySubmission from "./pages/ViewMySubmission";
-import ViewClass from "./pages/ViewClass";
-import ViewAssignment from "./pages/ViewAssignment";
-import Dashboard from "./pages/Dashboard";
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const CreateClass = lazy(() => import("./pages/CreateClass"));
+const JoinClass = lazy(() => import("./pages/JoinClass"));
+const MyClasses = lazy(() => import("./pages/MyClasses"));
+const CreateAssignment = lazy(() => import("./pages/CreateAssignment"));
+const ClassAssignments = lazy(() => import("./pages/ClassAssignments"));
+const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
+const AssignmentSubmissions = lazy(() => import("./pages/AssignmentSubmissions"));
+const ViewMySubmission = lazy(() => import("./pages/ViewMySubmission"));
+const ViewClass = lazy(() => import("./pages/ViewClass"));
+const ViewAssignment = lazy(() => import("./pages/ViewAssignment"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
 import { Toaster } from "./components/ui/sonner";
 import TeacherAssignments from "./pages/TeacherAssignments";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { Loading } from "./components/Loading";
 
 function App() {
   return (
     <ErrorBoundary>
       <BrowserRouter>
         <Navbar />
+        <main id="main-content">
+        <Suspense fallback={<Loading message="Loading..." fullScreen />}>        
         <Routes>
           <Route
             path="/"
@@ -133,7 +137,9 @@ function App() {
             </ProtectedRoute>
           }
         />
-      </Routes>
+        </Routes>
+        </Suspense>
+        </main>
       <Toaster />
     </BrowserRouter>
     </ErrorBoundary>

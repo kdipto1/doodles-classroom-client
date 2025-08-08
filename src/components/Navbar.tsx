@@ -1,17 +1,33 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate("/login");
   };
+
+  // Close mobile menu on route change and on Escape key
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [menuOpen]);
 
   // Navigation links for user roles
   const navLinks = user ? (
@@ -90,7 +106,14 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="w-full bg-white dark:bg-zinc-900 shadow px-4 py-3 flex items-center sticky top-0 z-30 border-b border-gray-100">
+    <nav className="w-full bg-white dark:bg-zinc-900 shadow px-4 py-3 flex items-center sticky top-0 z-30 border-b border-gray-100 dark:border-zinc-700">
+      {/* Skip link for keyboard users */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 bg-white dark:bg-zinc-900 text-blue-600 px-3 py-1 rounded shadow"
+      >
+        Skip to content
+      </a>
       <div className="flex items-center justify-between w-full">
         <Link
           to="/"
@@ -106,6 +129,8 @@ const Navbar = () => {
           className="md:hidden ml-2 p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={() => setMenuOpen((prev) => !prev)}
           aria-label="Toggle menu"
+          aria-expanded={menuOpen}
+          aria-controls="mobile-menu"
         >
           <svg
             className="h-6 w-6 text-blue-600"
@@ -145,11 +170,12 @@ const Navbar = () => {
             </div>
           )}
           {navLinks}
+          <ThemeToggle />
         </div>
       </div>
       {/* Mobile nav dropdown */}
       {menuOpen && (
-        <div className="absolute left-0 top-full w-full bg-white dark:bg-zinc-900 shadow-md border-b border-gray-100 dark:border-zinc-700 flex flex-col items-start px-4 py-4 md:hidden animate-fade-in z-40">
+        <div id="mobile-menu" className="absolute left-0 top-full w-full bg-white dark:bg-zinc-900 shadow-md border-b border-gray-100 dark:border-zinc-700 flex flex-col items-start px-4 py-4 md:hidden animate-fade-in z-40">
           {user && (
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full mb-3">
               <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
@@ -161,7 +187,10 @@ const Navbar = () => {
               </span>
             </div>
           )}
-          <div className="flex flex-col w-full gap-2">{navLinks}</div>
+          <div className="flex flex-col w-full gap-2">
+            {navLinks}
+            <div className="mt-2"><ThemeToggle /></div>
+          </div>
         </div>
       )}
     </nav>

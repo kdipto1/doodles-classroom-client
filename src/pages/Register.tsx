@@ -26,10 +26,7 @@ function Register() {
 
   const onSubmit = async (data: RegisterFormData) => {
     try {
-      const res = await axiosInstance.post(
-        "/auth/register",
-        data
-      );
+      const res = await axiosInstance.post("/auth/register", data);
       toast.info(`${res.data.message}, Please login!`);
       navigate("/login");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,14 +51,13 @@ function Register() {
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Name
               </label>
               <div className="mt-1">
                 <Input
                   id="name"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your name"
                   {...register("name")}
                 />
@@ -75,14 +71,13 @@ function Register() {
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Email address
               </label>
               <div className="mt-1">
                 <Input
                   id="email"
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your email"
                   {...register("email")}
                 />
@@ -96,7 +91,7 @@ function Register() {
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 Password
               </label>
@@ -104,9 +99,9 @@ function Register() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm pr-10"
                   placeholder="Enter your password"
                   {...register("password")}
+                  className="pr-10"
                 />
                 <button
                   type="button"
@@ -155,7 +150,7 @@ function Register() {
               </div>
             </div>
             <div>
-              <Label className="mb-1 block text-sm font-medium text-gray-700">
+            <Label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Role
               </Label>
               <Controller
