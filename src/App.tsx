@@ -19,6 +19,7 @@ import { Toaster } from "./components/ui/sonner";
 import TeacherAssignments from "./pages/TeacherAssignments";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { Loading } from "./components/Loading";
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 function App() {
   return (
@@ -137,6 +138,8 @@ function App() {
             </ProtectedRoute>
           }
         />
+        {/* 404 Not Found route */}
+        <Route path="*" element={<NotFound />} />
         </Routes>
         </Suspense>
         </main>

@@ -120,7 +120,7 @@ const Navbar = () => {
           className="flex items-center gap-2 text-2xl font-extrabold text-blue-600 tracking-tight"
         >
           <span className="inline-block bg-blue-600 text-white rounded-full px-2 py-1 text-lg font-bold">
-            G
+            D
           </span>
           <span className="text-blue-600">Classroom</span>
         </Link>
@@ -165,7 +165,9 @@ const Navbar = () => {
               </span>
               <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                 Hi, {user?.name}{" "}
-                <span className="text-xs text-gray-500 dark:text-gray-400">({user?.role})</span>
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ({user?.role})
+                </span>
               </span>
             </div>
           )}
@@ -175,7 +177,10 @@ const Navbar = () => {
       </div>
       {/* Mobile nav dropdown */}
       {menuOpen && (
-        <div id="mobile-menu" className="absolute left-0 top-full w-full bg-white dark:bg-zinc-900 shadow-md border-b border-gray-100 dark:border-zinc-700 flex flex-col items-start px-4 py-4 md:hidden animate-fade-in z-40">
+        <div
+          id="mobile-menu"
+          className="absolute left-0 top-full w-full bg-white dark:bg-zinc-900 shadow-md border-b border-gray-100 dark:border-zinc-700 flex flex-col items-start px-4 py-4 md:hidden animate-fade-in z-40"
+        >
           {user && (
             <div className="flex items-center gap-2 bg-blue-50 px-3 py-1 rounded-full mb-3">
               <span className="w-8 h-8 flex items-center justify-center rounded-full bg-blue-200 text-blue-700 font-bold text-lg uppercase">
@@ -189,7 +194,9 @@ const Navbar = () => {
           )}
           <div className="flex flex-col w-full gap-2">
             {navLinks}
-            <div className="mt-2"><ThemeToggle /></div>
+            <div className="mt-2">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       )}
