@@ -29,3 +29,7 @@ repomix-server-code-output.xml
 GEMINI.md
 DEVELOPMENT-plan.md
 IMPROVEMENT-PLAN.md
+.vercel
+fixes
+# Local Netlify folder
+.netlify
