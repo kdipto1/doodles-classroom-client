@@ -1,26 +1,30 @@
-import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axiosInstance from "../api/axios";
-import axios from "axios";
-import { getData } from "@/api/response";
+import type { Submission } from "@/lib/validation";
+import { useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-
-interface Submission {
-  _id: string;
-  submissionText: string;
-  submittedAt: string;
-  studentId: {
-    name: string;
-    email: string;
-  };
-  marks: number | null;
-  feedback: string;
-}
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Loading } from "@/components/Loading";
+import { EmptyState } from "@/components/EmptyState";
+import { LoadingSpinner } from "@/components/Loading";
+import {
+  useSubmissionsByAssignment,
+  useAssignment,
+  useGradeSubmissionMutation,
+} from "@/hooks/queries";
+import {
+  FileText,
+  Users,
+  Clock,
+  Star,
+  CheckCircle,
+  Edit,
+  Save,
+  X,
+} from "lucide-react";
 
 interface GradingState {
   [id: string]: {
@@ -32,195 +36,438 @@ interface GradingState {
 function AssignmentSubmissions() {
   const { assignmentId } = useParams<{ assignmentId: string }>();
   const { user } = useAuth();
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [grading, setGrading] = useState<GradingState>({});
-  const [editEnabled, setEditEnabled] = useState<{ [id: string]: boolean }>({});
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    const fetchSubmissions = async () => {
-      try {
-        const res = await axiosInstance.get(
-          `/submissions/assignment/${assignmentId}`
-        );
-        const data = getData<Submission[]>(res);
-        setSubmissions(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          toast.error(
-            err?.response?.data?.message || "Failed to fetch submissions"
-          );
-        } else {
-          toast.error(
-            "An unexpected error occurred while fetching submissions."
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  const [gradingState, setGradingState] = useState<GradingState>({});
+  const [editingSubmission, setEditingSubmission] = useState<string | null>(
+    null
+  );
 
-    if (assignmentId && user?.role === "teacher") {
-      fetchSubmissions();
-    }
-  }, [assignmentId, user, grading]);
+  // Query hooks
+  const {
+    data: assignment,
+    isLoading: assignmentLoading,
+    isError: assignmentError,
+  } = useAssignment(assignmentId!, !!assignmentId);
 
-  const handleGradeChange = (id: string, field: string, value: string) => {
-    setGrading((prev) => ({
+  const {
+    data: submissions,
+    isLoading: submissionsLoading,
+    isError: submissionsError,
+    error: submissionsErrorDetails,
+  } = useSubmissionsByAssignment(
+    assignmentId!,
+    !!assignmentId && user?.role === "teacher"
+  ) as { data: Submission[] | undefined; isLoading: boolean; isError: boolean; error: Error | null };
+
+  const gradeSubmissionMutation = useGradeSubmissionMutation();
+
+  // Handle grading form changes
+  const handleGradingChange = (
+    submissionId: string,
+    field: "marks" | "feedback",
+    value: string
+  ) => {
+    setGradingState((prev) => ({
       ...prev,
-      [id]: {
-        ...prev[id],
+      [submissionId]: {
+        ...prev[submissionId],
         [field]: value,
       },
     }));
   };
 
-  const handleGradeSubmit = async (submissionId: string) => {
-    try {
-      const { marks, feedback } = grading[submissionId] || {};
-      if (!marks) {
-        toast("Marks are required");
-        return;
+  // Start editing a submission
+  const startEditing = (submission: Submission) => {
+    setEditingSubmission(submission._id);
+    setGradingState((prev) => ({
+      ...prev,
+      [submission._id]: {
+        marks: submission.marks?.toString() || "",
+        feedback: submission.feedback || "",
+      },
+    }));
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingSubmission(null);
+    setGradingState((prev) => {
+      const newState = { ...prev };
+      if (editingSubmission) {
+        delete newState[editingSubmission];
       }
-      const res = await axiosInstance.patch(
-        `/submissions/${submissionId}/grade`,
-        {
-          marks: parseInt(marks),
-          feedback,
-        }
-      );
-      toast(res.data.message || "Grade submitted!");
-      // Optionally, refresh the submissions to reflect the changes
-      const updatedSubmissions = submissions.map((sub) =>
-        sub._id === submissionId
-          ? { ...sub, marks: parseInt(marks), feedback }
-          : sub
-      );
-      setSubmissions(updatedSubmissions);
-      setEditEnabled((prev) => ({ ...prev, [submissionId]: false }));
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        toast.error(err.response?.data?.message || "Failed to submit grade");
-      } else {
-        toast.error("An unexpected error occurred while submitting grade.");
-      }
+      return newState;
+    });
+  };
+
+  // Submit grading
+  const handleGradeSubmission = async (submissionId: string) => {
+    const gradeData = gradingState[submissionId];
+    if (!gradeData) return;
+
+    const marks = parseInt(gradeData.marks);
+    if (isNaN(marks) || marks < 0 || marks > 100) {
+      // toast.error would be handled by mutation
+      return;
     }
+
+    await gradeSubmissionMutation.mutateAsync({
+      submissionId,
+      assignmentId: assignmentId!,
+      gradeData: {
+        marks,
+        feedback: gradeData.feedback,
+      },
+    });
+    setEditingSubmission(null);
+    setGradingState((prev) => {
+      const newState = { ...prev };
+      delete newState[submissionId];
+      return newState;
+    });
   };
 
-  const enableEdit = (submissionId: string) => {
-    setEditEnabled((prev) => ({ ...prev, [submissionId]: true }));
-  };
+  if (assignmentLoading || submissionsLoading) {
+    return <Loading message="Loading submissions..." fullScreen />;
+  }
 
-  if (loading)
+  if (assignmentError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">Loading submissions...</span>
-      </div>
-    );
-
-  if (submissions.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">No submissions found</span>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          title="Assignment Not Found"
+          description="The assignment you're looking for doesn't exist or you don't have access to it."
+          action={{
+            label: "Go Back",
+            onClick: () => navigate("/classes"),
+          }}
+        />
       </div>
     );
   }
 
+  if (submissionsError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          title="Error Loading Submissions"
+          description={
+            submissionsErrorDetails?.message ||
+            "Failed to load submissions for this assignment"
+          }
+          action={{
+            label: "Try Again",
+            onClick: () => window.location.reload(),
+          }}
+        />
+      </div>
+    );
+  }
+
+  if (!assignment) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          title="Assignment Not Found"
+          description="The assignment you're looking for doesn't exist."
+          action={{
+            label: "Go Back",
+            onClick: () => navigate("/classes"),
+          }}
+        />
+      </div>
+    );
+  }
+
+  const getSubmissionStats = () => {
+    if (!submissions) return { total: 0, graded: 0, pending: 0 };
+    const total = submissions.length;
+    const graded = submissions.filter(
+      (s: Submission) => s.marks !== null && s.marks !== undefined
+    ).length;
+    const pending = total - graded;
+    return { total, graded, pending };
+  };
+
+  const stats = getSubmissionStats();
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
-      <div className="w-full max-w-4xl">
-        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-8">
-          Student Submissions
-        </h2>
-        <div className="space-y-8">
-          {submissions.map((sub) => (
-            <Card
-              key={sub._id}
-              className="p-6 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
-            >
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                <p className="text-lg font-semibold text-blue-700 dark:text-blue-300">
-                  {sub.studentId.name}{" "}
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">
-                    ({sub.studentId.email})
-                  </span>
-                </p>
-                {typeof sub.marks === "number" ? (
-                  <span className="inline-block bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 text-xs px-3 py-1 rounded-full font-semibold mt-2 md:mt-0">
-                    Graded
-                  </span>
-                ) : (
-                  <span className="inline-block bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-xs px-3 py-1 rounded-full font-semibold mt-2 md:mt-0">
-                    Pending
-                  </span>
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4">
+      <div className="max-w-6xl mx-auto space-y-6">
+        {/* Assignment Header */}
+        <Card className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 border-purple-200 dark:border-purple-800">
+          <div className="space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  <h1 className="text-2xl font-bold text-purple-900 dark:text-purple-100">
+                    {assignment.title} - Submissions
+                  </h1>
+                </div>
+                {assignment.description && (
+                  <p className="text-purple-700 dark:text-purple-300">
+                    {assignment.description}
+                  </p>
                 )}
               </div>
-              <p className="mt-2 whitespace-pre-wrap text-gray-800 dark:text-gray-200 bg-gray-100 dark:bg-zinc-700 rounded p-3 mb-2">
-                {sub.submissionText}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
-                Submitted: {new Date(sub.submittedAt).toLocaleString()}
-              </p>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 items-end bg-white dark:bg-zinc-800 p-4 rounded-xl border border-gray-200 dark:border-zinc-700">
-                <div>
-                  <label
-                    htmlFor={`marks-${sub._id}`}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Marks
-                  </label>
-                  <Input
-                    id={`marks-${sub._id}`}
-                    type="number"
-                    placeholder="Marks"
-                    defaultValue={sub.marks || ""}
-                    onChange={(e) =>
-                      handleGradeChange(sub._id, "marks", e.target.value)
-                    }
-                    aria-invalid={
-                      !grading[sub._id]?.marks && sub.marks === null
-                        ? "true"
-                        : "false"
-                    }
-                    disabled={!editEnabled[sub._id] && sub.marks !== null}
-                  />
-                </div>
-                <div>
-                  <label
-                    htmlFor={`feedback-${sub._id}`}
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-                  >
-                    Feedback
-                  </label>
-                  <Textarea
-                    id={`feedback-${sub._id}`}
-                    placeholder="Feedback"
-                    defaultValue={sub.feedback || ""}
-                    onChange={(e) =>
-                      handleGradeChange(sub._id, "feedback", e.target.value)
-                    }
-                    disabled={!editEnabled[sub._id] && sub.marks !== null}
-                  />
-                </div>
-                <div className="md:col-span-2 flex justify-end mt-2 space-x-2">
-                  {sub.marks !== null && !editEnabled[sub._id] && (
-                    <Button
-                      variant="outline"
-                      onClick={() => enableEdit(sub._id)}
-                    >
-                      Enable Edit
-                    </Button>
-                  )}
-                  <Button
-                    onClick={() => handleGradeSubmit(sub._id)}
-                    disabled={!editEnabled[sub._id] && sub.marks !== null}
-                  >
-                    Submit Grade
-                  </Button>
-                </div>
+              <div className="flex items-center gap-2">
+                <Badge
+                  variant="secondary"
+                  className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+                >
+                  <Users className="h-4 w-4 mr-1" />
+                  {stats.total} Submissions
+                </Badge>
               </div>
-            </Card>
-          ))}
+            </div>
+
+            {assignment.dueDate && (
+              <div className="flex items-center gap-2 text-sm">
+                <Clock className="h-4 w-4 text-purple-600" />
+                <span className="text-purple-600 dark:text-purple-400">
+                  Due: {new Date(assignment.dueDate).toLocaleString()}
+                </span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        {/* Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="p-4 text-center bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+              {stats.total}
+            </div>
+            <div className="text-sm text-blue-700 dark:text-blue-300">
+              Total Submissions
+            </div>
+          </Card>
+          <Card className="p-4 text-center bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+            <div className="text-2xl font-bold text-green-900 dark:text-green-100">
+              {stats.graded}
+            </div>
+            <div className="text-sm text-green-700 dark:text-green-300">
+              Graded
+            </div>
+          </Card>
+          <Card className="p-4 text-center bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+            <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+              {stats.pending}
+            </div>
+            <div className="text-sm text-yellow-700 dark:text-yellow-300">
+              Pending Review
+            </div>
+          </Card>
+        </div>
+
+        {/* Submissions List */}
+        {!submissions || submissions.length === 0 ? (
+          <EmptyState
+            icon={<Users className="h-16 w-16 text-gray-400" />}
+            title="No Submissions Yet"
+            description="No students have submitted this assignment yet."
+            action={{
+              label: "Go Back to Assignment",
+              onClick: () => navigate(`/assignments/${assignmentId}`),
+            }}
+          />
+        ) : (
+          <div className="space-y-6">
+            {submissions.map((submission: Submission) => {
+              const isEditing = editingSubmission === submission._id;
+              const isGraded =
+                submission.marks !== null && submission.marks !== undefined;
+              const currentGrading = gradingState[submission._id];
+
+              return (
+                <Card key={submission._id} className="p-6">
+                  <div className="space-y-4">
+                    {/* Student Info */}
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                            <span className="text-blue-600 dark:text-blue-300 font-medium">
+                              {submission.studentId?.name
+                                ?.charAt(0)
+                                .toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              {submission.studentId?.name}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {submission.studentId?.email}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            Submitted:{" "}
+                            {new Date(submission.submittedAt).toLocaleString()}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isGraded && !isEditing && (
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-300"
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            {submission.marks}/100
+                          </Badge>
+                        )}
+                        {!isEditing && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => startEditing(submission)}
+                            className="flex items-center gap-1"
+                          >
+                            <Edit className="h-3 w-3" />
+                            {isGraded ? "Edit Grade" : "Grade"}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Submission Content */}
+                    <div className="bg-gray-50 dark:bg-zinc-800 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Submission:
+                      </h4>
+                      <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap">
+                        {submission.submissionText}
+                      </p>
+                    </div>
+
+                    {/* Grading Section */}
+                    {isEditing ? (
+                      <div className="bg-blue-50 dark:bg-blue-950 rounded-lg p-4 space-y-4">
+                        <h4 className="text-lg font-semibold text-blue-900 dark:text-blue-100">
+                          Grade Submission
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Marks (0-100)
+                            </label>
+                            <Input
+                              type="number"
+                              min="0"
+                              max="100"
+                              placeholder="Enter marks"
+                              value={currentGrading?.marks || ""}
+                              onChange={(e) =>
+                                handleGradingChange(
+                                  submission._id,
+                                  "marks",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              Feedback
+                            </label>
+                            <Textarea
+                              placeholder="Enter feedback for the student"
+                              value={currentGrading?.feedback || ""}
+                              onChange={(e) =>
+                                handleGradingChange(
+                                  submission._id,
+                                  "feedback",
+                                  e.target.value
+                                )
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() =>
+                              handleGradeSubmission(submission._id)
+                            }
+                            disabled={
+                              gradeSubmissionMutation.isPending ||
+                              !currentGrading?.marks
+                            }
+                            className="flex items-center gap-1"
+                          >
+                            {gradeSubmissionMutation.isPending ? (
+                              <>
+                                <LoadingSpinner className="h-4 w-4" />
+                                Saving...
+                              </>
+                            ) : (
+                              <>
+                                <Save className="h-4 w-4" />
+                                Save Grade
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            onClick={cancelEditing}
+                            disabled={gradeSubmissionMutation.isPending}
+                            className="flex items-center gap-1"
+                          >
+                            <X className="h-4 w-4" />
+                            Cancel
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      isGraded && (
+                        <div className="bg-green-50 dark:bg-green-950 rounded-lg p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2">
+                                <CheckCircle className="h-5 w-5 text-green-600" />
+                                <span className="font-semibold text-green-900 dark:text-green-100">
+                                  Graded: {submission.marks}/100
+                                </span>
+                              </div>
+                              {submission.feedback && (
+                                <div>
+                                  <h5 className="text-sm font-medium text-green-700 dark:text-green-300 mb-1">
+                                    Feedback:
+                                  </h5>
+                                  <p className="text-green-800 dark:text-green-200 text-sm whitespace-pre-wrap">
+                                    {submission.feedback}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Navigation */}
+        <div className="flex justify-center gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate(`/assignments/${assignmentId}`)}
+          >
+            ← Back to Assignment
+          </Button>
+          <Button variant="outline" onClick={() => navigate("/classes")}>
+            Back to Classes
+          </Button>
         </div>
       </div>
     </div>

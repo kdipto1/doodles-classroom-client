@@ -6,43 +6,38 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, Link } from "react-router-dom";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import axiosInstance from "../api/axios";
-import { toast } from "sonner";
+import { useRegisterMutation } from "@/hooks/queries";
+import { LoadingSpinner } from "@/components/Loading";
 import { useState } from "react";
 
 function Register() {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const registerMutation = useRegisterMutation();
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     defaultValues: { role: "student" },
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    try {
-      const res = await axiosInstance.post("/auth/register", data);
-      toast.info(`${res.data.message}, Please login!`);
-      navigate("/login");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      toast(err.response?.data?.message || "Registration failed");
-    }
+    await registerMutation.mutateAsync(data);
+    navigate("/login");
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-50">
             Create your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Join and start your journey
           </p>
         </div>
@@ -60,9 +55,10 @@ function Register() {
                   id="name"
                   placeholder="Enter your name"
                   {...register("name")}
+                  aria-invalid={errors.name ? "true" : "false"}
                 />
                 {errors.name && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-500">
                     {errors.name.message}
                   </p>
                 )}
@@ -80,9 +76,11 @@ function Register() {
                   id="email"
                   placeholder="Enter your email"
                   {...register("email")}
+                  aria-invalid={errors.email ? "true" : "false"}
+                  autoComplete="email"
                 />
                 {errors.email && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-500">
                     {errors.email.message}
                   </p>
                 )}
@@ -101,12 +99,13 @@ function Register() {
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
                   {...register("password")}
-                  className="pr-10"
+                  aria-invalid={errors.password ? "true" : "false"}
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
-                  className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-blue-600 focus:outline-none z-50"
+                  className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-blue-600 focus:outline-none z-50 dark:text-gray-400 dark:hover:text-blue-500"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -143,14 +142,14 @@ function Register() {
                   )}
                 </button>
                 {errors.password && (
-                  <p className="mt-2 text-sm text-red-600">
+                  <p className="mt-2 text-sm text-red-500">
                     {errors.password.message}
                   </p>
                 )}
               </div>
             </div>
             <div>
-            <Label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
+              <Label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
                 Role
               </Label>
               <Controller
@@ -174,7 +173,7 @@ function Register() {
                 )}
               />
               {errors.role && (
-                <p className="mt-2 text-sm text-red-600">
+                <p className="mt-2 text-sm text-red-500">
                   {errors.role.message}
                 </p>
               )}
@@ -183,31 +182,12 @@ function Register() {
           <div>
             <Button
               type="submit"
-              disabled={isSubmitting}
+              disabled={registerMutation.isPending}
               className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? (
+              {registerMutation.isPending ? (
                 <>
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <LoadingSpinner className="h-5 w-5 text-white mr-2" />
                   Registering...
                 </>
               ) : (

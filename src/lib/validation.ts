@@ -7,25 +7,25 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = loginSchema.extend({
-  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
-  password: z.string()
-    .min(8, "Password must be at least 8 characters long")
-    .max(100, "Password must be less than 100 characters")
-    .regex(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
-      "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character"
-    ),
+  name: z.string().min(1, "Name is required"),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long")
+    .max(72, "Password cannot be longer than 72 characters"),
   role: z.enum(["student", "teacher"]),
 });
 
 export const createClassSchema = z.object({
-  title: z.string().min(2, "Class name must be at least 2 characters").max(100, "Class name must be less than 100 characters"),
-  subject: z.string().max(100, "Subject must be less than 100 characters").optional(),
-  description: z.string().max(1000, "Description must be less than 1000 characters").optional(),
+  title: z.string().min(2, "Class name must be at least 2 characters"),
+  subject: z.string().optional(),
+  description: z.string().optional(),
 });
 
 export const joinClassSchema = z.object({
-  code: z.string().min(1, "Class code is required").max(20, "Invalid class code format"),
+  code: z
+    .string()
+    .min(1, "Class code is required")
+    .max(20, "Invalid class code format"),
 });
 
 // API Response validation schemas
@@ -53,11 +53,15 @@ export const classSchema = z.object({
     name: z.string(),
     email: z.string(),
   }),
-  students: z.array(z.object({
-    _id: z.string(),
-    name: z.string(),
-    email: z.string(),
-  })).optional(),
+  students: z
+    .array(
+      z.object({
+        _id: z.string(),
+        name: z.string(),
+        email: z.string(),
+      })
+    )
+    .optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 });
@@ -68,9 +72,19 @@ export const assignmentSchema = z.object({
   description: z.string().optional(),
   dueDate: z.string().optional(),
   classId: z.string(),
-  createdBy: z.string(), // Changed from teacherId to match server model
+  createdBy: z.object({
+    _id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  }),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
+  mySubmission: z.object({
+    _id: z.string(),
+    submissionText: z.string(),
+    submittedAt: z.string(),
+    marks: z.number().optional(),
+  }).optional(),
 });
 
 export const dashboardStatsSchema = z.object({
@@ -104,8 +118,32 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type CreateClassFormData = z.infer<typeof createClassSchema>;
 export type JoinClassFormData = z.infer<typeof joinClassSchema>;
-export type ApiResponse<T = unknown> = z.infer<typeof apiResponseSchema> & { data?: T };
+export type ApiResponse<T = unknown> = z.infer<typeof apiResponseSchema> & {
+  data?: T;
+};
 export type User = z.infer<typeof userSchema>;
 export type Class = z.infer<typeof classSchema>;
 export type Assignment = z.infer<typeof assignmentSchema>;
+export const submissionSchema = z.object({
+  _id: z.string(),
+  submissionText: z.string(),
+  submittedAt: z.string(),
+  studentId: z.object({
+    _id: z.string(),
+    name: z.string(),
+    email: z.string(),
+  }),
+  marks: z.number().optional(),
+  feedback: z.string().optional(),
+});
+
 export type DashboardStats = z.infer<typeof dashboardStatsSchema>;
+export type Submission = z.infer<typeof submissionSchema>;
+
+export interface LoginData {
+  _id: string;
+  accessToken: string;
+  role: "teacher" | "student";
+  name: string;
+  email?: string;
+}

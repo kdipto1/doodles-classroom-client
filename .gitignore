@@ -25,6 +25,7 @@ dist-ssr
 repomix-output.xml
 repomix-client-code-output.txt
 repomix-server-code-output.xml
+API_Integration_Doc.md
 .env
 GEMINI.md
 DEVELOPMENT-plan.md

@@ -1,7 +1,14 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  type ReactNode,
+} from "react";
 import axiosInstance from "../api/axios";
 import { getData } from "@/api/response";
-// import { apiResponseSchema } from "../lib/validation";
+import { useQuery } from "@tanstack/react-query";
 
 export interface IUser {
   _id: string;
@@ -11,20 +18,12 @@ export interface IUser {
   token: string;
 }
 
-interface LoginData {
-  _id: string;
-  accessToken: string;
-  refreshToken: string;
-  role: "teacher" | "student";
-  name: string;
-  email?: string;
-}
+import type { LoginData } from "@/lib/validation"; // New import
 
 interface AuthContextType {
   user: LoginData | null;
   login: (user: LoginData) => void;
   logout: () => void;
-  getMe: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -35,7 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
-  const [isLoading, setIsLoading] = useState(false);
 
   const login = (userData: LoginData) => {
     localStorage.setItem("user", JSON.stringify(userData));
@@ -47,48 +45,58 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
   }, []);
 
-  const getMe = useCallback(async () => {
-    if (!user?.accessToken) return;
-    
-    try {
-      setIsLoading(true);
+  const {
+    data: fetchedUser,
+    isLoading,
+    error,
+  } = useQuery<IUser>({
+    queryKey: ["me", user?.accessToken],
+    queryFn: async () => {
       const response = await axiosInstance.get("/auth/me");
-      const userData = getData(response);
-      
-      if (userData) {
-        // Update the user in local storage and state with the fetched data
-        const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-        const updatedUser = { 
-          ...currentUser, 
-          ...userData, 
-          accessToken: currentUser.accessToken, 
-          refreshToken: currentUser.refreshToken 
-        };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        setUser(updatedUser);
-      }
-    } catch (error: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      console.error("Failed to fetch user data:", (error as any).response?.data?.message || (error as Error).message);
-      
-      // Only logout if it's an authentication error
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if ((error as any).response?.status === 401 || (error as any).response?.status === 403) {
-        logout();
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user?.accessToken, logout]);
+      return getData(response);
+    },
+    enabled: !!user?.accessToken,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
 
+  // Use useEffect to handle onSuccess equivalent
   useEffect(() => {
-    if (user && user.accessToken) {
-      getMe();
+    if (fetchedUser) {
+      const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+      const updatedUser = {
+        ...currentUser,
+        ...fetchedUser,
+        accessToken: currentUser.accessToken,
+      };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setUser(updatedUser);
     }
-  }, []); // Remove getMe from dependencies to prevent infinite loop
+  }, [fetchedUser]);
+
+  // Use useEffect to handle onError equivalent
+  useEffect(() => {
+    if (error) {
+      const axiosError = error as any; // eslint-disable-line @typescript-eslint/no-explicit-any
+      if (axiosError.isAxiosError && axiosError.config.url === "/auth/me") {
+        console.error(
+          "Failed to fetch user data:",
+          axiosError.response?.data?.message || axiosError.message
+        );
+
+        if (
+          axiosError.response?.status === 401 ||
+          axiosError.response?.status === 403
+        ) {
+          logout();
+        }
+      }
+    }
+  }, [error, logout]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, getMe, isLoading }}>
+    <AuthContext.Provider value={{ user, login, logout, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

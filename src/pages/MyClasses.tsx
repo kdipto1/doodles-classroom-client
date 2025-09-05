@@ -1,41 +1,36 @@
-import { useEffect } from "react";
-import axiosInstance from "../api/axios";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loading } from "@/components/Loading";
 import { EmptyState } from "@/components/EmptyState";
-import { useApi } from "@/hooks/useApi";
-import type { Class } from "@/lib/validation";
-import { classSchema } from "@/lib/validation";
-import { BookOpen } from "lucide-react";
-import { z } from "zod";
-import { getData, getMessage } from "@/api/response";
+import { useMyClasses, usePrefetchClass } from "@/hooks/queries";
 
-const classesArraySchema = z.array(classSchema);
+import { BookOpen } from "lucide-react";
 
 function MyClasses() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const prefetchClass = usePrefetchClass();
 
-  const {
-    data: classes,
-    loading,
-    execute: fetchClasses,
-  } = useApi<Class[]>({
-    responseSchema: classesArraySchema,
-  });
+  const { data: classes, isLoading, isError, error } = useMyClasses();
 
-  useEffect(() => {
-    fetchClasses(async () => {
-      const res = await axiosInstance.get("/classes/my");
-      return { data: getData<Class[]>(res), message: getMessage(res) || 'Classes retrieved successfully' };
-    });
-  }, [fetchClasses]);
+  // Handle mouse enter to prefetch class data for better UX
+  const handleClassHover = (classId: string) => {
+    prefetchClass(classId);
+  };
 
-  if (loading) {
+  if (isLoading) {
     return <Loading message="Loading your classes..." fullScreen />;
+  }
+
+  if (isError) {
+    return (
+      <EmptyState
+        title="Error"
+        description={`Failed to load classes: ${error?.message}`}
+      />
+    );
   }
 
   if (!classes || classes.length === 0) {
@@ -74,6 +69,7 @@ function MyClasses() {
             <Card
               key={cls._id}
               className="p-6 bg-gradient-to-br from-blue-100 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
+              onMouseEnter={() => handleClassHover(cls._id)}
             >
               <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
                 {cls.title}
