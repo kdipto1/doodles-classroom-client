@@ -6,8 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
-import { useApiMutation } from "@/hooks/useApi";
-import { authService } from "@/services/api.service";
+import { useLoginMutation } from "@/hooks/queries";
 import { LoadingSpinner } from "@/components/Loading";
 
 function Login() {
@@ -23,17 +22,18 @@ function Login() {
     resolver: zodResolver(loginSchema),
   });
 
-  const { mutate: loginUser, loading } = useApiMutation({
-    successMessage: "Login successful!",
-    onSuccess: (data) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      login(data as any);
-      navigate("/");
-    },
-  });
+  const loginMutation = useLoginMutation();
 
-  const onSubmit = async (data: LoginFormData) => {
-    await loginUser(() => authService.login(data));
+  const onSubmit = (data: LoginFormData) => {
+    loginMutation.mutate(data, {
+      onSuccess: (result) => {
+        login({
+          ...result,
+          role: result.role as "teacher" | "student",
+        });
+        navigate("/");
+      },
+    });
   };
 
   return (
@@ -138,10 +138,10 @@ function Login() {
           <div>
             <Button
               type="submit"
-              disabled={loading}
+              disabled={loginMutation.isPending}
               className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {loginMutation.isPending ? (
                 <>
                   <LoadingSpinner className="h-5 w-5 text-white" />
                   Signing in...

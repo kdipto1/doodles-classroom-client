@@ -1,140 +1,252 @@
-import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import axiosInstance from "../api/axios";
-import axios from "axios";
-import { getData } from "@/api/response";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { toast } from "sonner";
-
-interface Assignment {
-  _id: string;
-  title: string;
-  description: string;
-  dueDate: string;
-  mySubmission?: {
-    submittedAt: string;
-    marks?: number;
-  };
-}
+import { Badge } from "@/components/ui/badge";
+import { Loading } from "@/components/Loading";
+import { EmptyState } from "@/components/EmptyState";
+import { useAssignmentsByClass, usePrefetchAssignment } from "@/hooks/queries";
+import { FileText, Clock, CheckCircle, XCircle } from "lucide-react";
 
 function ClassAssignments() {
-  const { classId } = useParams();
+  const { classId } = useParams<{ classId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const prefetchAssignment = usePrefetchAssignment();
 
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    data: assignments,
+    isLoading,
+    isError,
+    error,
+  } = useAssignmentsByClass(
+    classId || "",
+    !!classId && user?.role === "student"
+  );
 
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        const res = await axiosInstance.get(`/assignments/class/${classId}`);
-        const data = getData<Assignment[]>(res);
-        setAssignments(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          toast.error(
-            err.response?.data?.message || "Failed to load assignments"
-          );
-        } else {
-          toast.error(
-            "An unexpected error occurred while loading assignments."
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Handle mouse enter to prefetch assignment data
+  const handleAssignmentHover = (assignmentId: string) => {
+    prefetchAssignment(assignmentId);
+  };
 
-    if (user?.role === "student" && classId) {
-      fetchAssignments();
-    }
-  }, [classId, user]);
+  if (isLoading) {
+    return <Loading message="Loading assignments..." fullScreen />;
+  }
 
-  if (loading)
+  if (isError) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">Loading assignments...</span>
-      </div>
-    );
-
-  if (assignments.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <span className="text-lg text-gray-500">No assignments found</span>
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          title="Error Loading Assignments"
+          description={error?.message || "Failed to load assignments"}
+          action={{
+            label: "Go Back to Classes",
+            onClick: () => navigate("/classes"),
+          }}
+        />
       </div>
     );
   }
 
+  if (!assignments || assignments.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4 flex items-center justify-center">
+        <EmptyState
+          icon={<FileText className="h-16 w-16 text-gray-400" />}
+          title="No Assignments Found"
+          description="This class doesn't have any assignments yet."
+          action={{
+            label: "Go Back to Classes",
+            onClick: () => navigate("/classes"),
+          }}
+        />
+      </div>
+    );
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getSubmissionStatus = (assignment: any) => {
+    if (assignment.mySubmission) {
+      if (assignment.mySubmission.marks !== undefined) {
+        return {
+          status: "graded",
+          label: "Graded",
+          icon: <CheckCircle className="h-4 w-4" />,
+          className:
+            "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+        };
+      }
+      return {
+        status: "submitted",
+        label: "Submitted",
+        icon: <CheckCircle className="h-4 w-4" />,
+        className:
+          "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+      };
+    }
+
+    const dueDate = new Date(assignment.dueDate);
+    const now = new Date();
+    const isOverdue = dueDate < now;
+
+    return {
+      status: "pending",
+      label: isOverdue ? "Overdue" : "Not Submitted",
+      icon: isOverdue ? (
+        <XCircle className="h-4 w-4" />
+      ) : (
+        <Clock className="h-4 w-4" />
+      ),
+      className: isOverdue
+        ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+        : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    };
+  };
+
+  const isAssignmentOverdue = (dueDate: string) => {
+    return new Date(dueDate) < new Date();
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
-      <div className="w-full max-w-3xl">
-        <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-8">
-          Assignments
-        </h2>
-        <div className="space-y-8">
-          {assignments.map((assignment) => (
-            <Card
-              key={assignment._id}
-              className="p-6 bg-gradient-to-br from-blue-50 to-white dark:from-blue-950 dark:to-zinc-800 border border-blue-200 dark:border-blue-800 hover:shadow-xl transition-shadow duration-200"
-            >
-              <h3 className="text-2xl font-bold text-blue-700 dark:text-blue-300 mb-2">
-                {assignment.title}
-              </h3>
-              <p className="text-gray-800 dark:text-gray-200 mb-2 whitespace-pre-wrap">
-                {assignment.description}
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Due:{" "}
-                <span className="font-medium">
-                  {new Date(assignment.dueDate).toLocaleDateString()}
-                </span>
-              </p>
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 mb-2">
+            Class Assignments
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Complete your assignments and track your progress
+          </p>
+        </div>
 
-              {/* Submission status chip */}
-              <div className="mt-2 mb-4">
-                {assignment.mySubmission ? (
-                  <>
-                    <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                      Submitted
+        <div className="space-y-6">
+          {assignments.map((assignment) => {
+            const submissionStatus = getSubmissionStatus(assignment);
+            const isOverdue = assignment.dueDate
+              ? isAssignmentOverdue(assignment.dueDate)
+              : false;
+
+            return (
+              <Card
+                key={assignment._id}
+                className="p-6 bg-white dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700 hover:shadow-lg transition-all duration-200"
+                onMouseEnter={() => handleAssignmentHover(assignment._id)}
+              >
+                <div className="space-y-4">
+                  {/* Assignment Header */}
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2 flex-1">
+                      <div className="flex items-center gap-3">
+                        <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                          {assignment.title}
+                        </h3>
+                      </div>
+                      {assignment.description && (
+                        <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                          {assignment.description}
+                        </p>
+                      )}
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={`${submissionStatus.className} flex items-center gap-1`}
+                    >
+                      {submissionStatus.icon}
+                      {submissionStatus.label}
+                    </Badge>
+                  </div>
+
+                  {/* Due Date */}
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-4 w-4 text-gray-500" />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Due:{" "}
+                      {assignment.dueDate
+                        ? new Date(assignment.dueDate).toLocaleString()
+                        : "No due date"}
                     </span>
-                    {assignment.mySubmission.marks !== undefined && (
-                      <span className="text-xs text-blue-600 dark:text-blue-400 font-medium ml-2">
-                        Graded
-                      </span>
+                    {isOverdue && !assignment.mySubmission && (
+                      <Badge variant="destructive" className="ml-2">
+                        Overdue
+                      </Badge>
                     )}
-                  </>
-                ) : (
-                  <span className="text-xs text-red-600 dark:text-red-400 font-medium">
-                    Not Submitted
-                  </span>
-                )}
-              </div>
+                  </div>
 
-              <div className="flex flex-col sm:flex-row gap-3">
-                <Button
-                  disabled={!!assignment.mySubmission}
-                  className="w-full sm:w-auto"
-                  onClick={() =>
-                    navigate(`/assignments/${assignment._id}/submit`)
-                  }
-                >
-                  {assignment.mySubmission ? "Submitted" : "Submit"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full sm:w-auto"
-                  onClick={() =>
-                    navigate(`/assignments/${assignment._id}/my-submission`)
-                  }
-                >
-                  View My Submission
-                </Button>
-              </div>
-            </Card>
-          ))}
+                  {/* Submission Info */}
+                  {assignment.mySubmission && (
+                    <div className="bg-gray-50 dark:bg-zinc-700 rounded-lg p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-gray-700 dark:text-gray-300">
+                          Submitted on:{" "}
+                          {new Date(
+                            assignment.mySubmission.submittedAt
+                          ).toLocaleString()}
+                        </span>
+                      </div>
+                      {assignment.mySubmission.marks !== undefined && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 dark:bg-green-900"
+                          >
+                            Grade: {assignment.mySubmission.marks}/100
+                          </Badge>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <Button
+                      disabled={!!assignment.mySubmission || isOverdue}
+                      className="flex-1 sm:flex-none"
+                      onClick={() =>
+                        navigate(`/assignments/${assignment._id}/submit`)
+                      }
+                    >
+                      {assignment.mySubmission
+                        ? "Already Submitted"
+                        : isOverdue
+                        ? "Submission Closed"
+                        : "Submit Assignment"}
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                      onClick={() =>
+                        navigate(`/assignments/${assignment._id}/my-submission`)
+                      }
+                    >
+                      View My Submission
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      className="flex-1 sm:flex-none"
+                      onClick={() => navigate(`/assignments/${assignment._id}`)}
+                    >
+                      View Details
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Navigation */}
+        <div className="mt-8 text-center">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/classes")}
+            className="flex items-center gap-2"
+          >
+            ← Back to Classes
+          </Button>
         </div>
       </div>
     </div>

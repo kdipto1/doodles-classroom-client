@@ -5,37 +5,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../api/axios";
-import { getMessage } from "@/api/response";
-import { toast } from "sonner";
+import { useCreateClassMutation } from "@/hooks/queries";
 import { LoadingSpinner } from "@/components/Loading";
 
 function CreateClass() {
-  
   const navigate = useNavigate();
+  const createClassMutation = useCreateClassMutation();
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CreateClassFormData>({
     resolver: zodResolver(createClassSchema),
   });
 
   const onSubmit = async (data: CreateClassFormData) => {
-    try {
-      const res = await axiosInstance.post("/classes/createClass", data);
-      toast.success(getMessage(res) || "Class created successfully!");
-      
-      navigate("/classes");
-    } catch (err: unknown) {
-      const errorMessage = 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (err as any).response?.data?.message || 
-        (err as Error).message || 
-        "Failed to create class. Please try again.";
-      toast.error(errorMessage);
-    }
+    await createClassMutation.mutateAsync(data);
+    navigate("/classes");
   };
 
   return (
@@ -107,10 +94,10 @@ function CreateClass() {
           </div>
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={createClassMutation.isPending}
             className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {createClassMutation.isPending ? (
               <>
                 <LoadingSpinner className="h-5 w-5 text-white mr-2" />
                 Creating...

@@ -4,18 +4,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useAuth } from "@/context/AuthContext";
-import axiosInstance from "../api/axios";
-import { getData } from "@/api/response";
-import axios from "axios";
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { LoadingSpinner } from "@/components/Loading";
+import { Loading } from "@/components/Loading";
+import { EmptyState } from "@/components/EmptyState";
+import { useMyClasses, useCreateAssignmentMutation } from "@/hooks/queries";
 
 const schema = z.object({
   classId: z.string().min(1, "Please select a class"),
-  title: z.string().min(2),
+  title: z.string().min(2, "Title must be at least 2 characters"),
   description: z.string().optional(),
   dueDate: z.string().optional(),
 });
@@ -23,21 +22,25 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 function CreateAssignment() {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [classes, setClasses] = useState<any[]>([]);
+  const location = useLocation();
+
+  // Query hooks
+  const {
+    data: classes,
+    isLoading: classesLoading,
+    isError: classesError,
+  } = useMyClasses();
+  const createAssignmentMutation = useCreateAssignmentMutation();
 
   const {
     register,
     handleSubmit,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
-
-  const location = useLocation();
 
   useEffect(() => {
     if (location.state?.classId) {
@@ -45,42 +48,47 @@ function CreateAssignment() {
     }
   }, [location.state, setValue]);
 
-  useEffect(() => {
-    const fetchClasses = async () => {
-      try {
-        const res = await axiosInstance.get("/classes/my");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = getData<any[]>(res);
-        setClasses(Array.isArray(data) ? data : []);
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          toast.error(err.response?.data?.message || "Failed to load classes");
-        } else {
-          toast.error("An unexpected error occurred while loading classes.");
-        }
-      }
-    };
-
-    if (user?.role === "teacher") {
-      fetchClasses();
-    }
-  }, [user]);
-
   const onSubmit = async (data: FormData) => {
-    try {
-      await axiosInstance.post("/assignments/createAssignment", data);
-      toast("Assignment created!");
-      navigate("/classes");
-    } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        toast.error(
-          err.response?.data?.message || "Failed to create assignment"
-        );
-      } else {
-        toast.error("An unexpected error occurred while creating assignment.");
-      }
-    }
+    await createAssignmentMutation.mutateAsync(data);
+    navigate("/classes");
   };
+
+  // Loading state for classes
+  if (classesLoading) {
+    return <Loading message="Loading classes..." fullScreen />;
+  }
+
+  // Error state for classes
+  if (classesError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
+        <EmptyState
+          title="Error Loading Classes"
+          description="Failed to load your classes. Please try again."
+          action={{
+            label: "Go Back",
+            onClick: () => navigate("/classes"),
+          }}
+        />
+      </div>
+    );
+  }
+
+  // No classes available
+  if (!classes || classes.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
+        <EmptyState
+          title="No Classes Found"
+          description="You need to create a class before you can create assignments."
+          action={{
+            label: "Create Class",
+            onClick: () => navigate("/classes/create"),
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
@@ -103,7 +111,7 @@ function CreateAssignment() {
               id="classId"
               {...register("classId")}
               aria-invalid={errors.classId ? "true" : "false"}
-              className="w-full mt-1 rounded-md border border-input bg-transparent px-3 py-2 text-base placeholder:text-muted-foreground text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-input/30"
+              className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-base placeholder:text-muted-foreground text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-zinc-700 dark:border-zinc-600"
             >
               <option value="">-- Choose a Class --</option>
               {classes.map((cls) => (
@@ -130,9 +138,10 @@ function CreateAssignment() {
               id="title"
               placeholder="Enter assignment title"
               {...register("title")}
+              aria-invalid={errors.title ? "true" : "false"}
             />
             {errors.title && (
-              <p className="mt-2 text-sm text-red-600">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.title.message}
               </p>
             )}
@@ -149,9 +158,10 @@ function CreateAssignment() {
               id="description"
               placeholder="Enter description"
               {...register("description")}
+              aria-invalid={errors.description ? "true" : "false"}
             />
             {errors.description && (
-              <p className="mt-2 text-sm text-red-600">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.description.message}
               </p>
             )}
@@ -168,9 +178,10 @@ function CreateAssignment() {
               id="dueDate"
               type="date"
               {...register("dueDate")}
+              aria-invalid={errors.dueDate ? "true" : "false"}
             />
             {errors.dueDate && (
-              <p className="mt-2 text-sm text-red-600">
+              <p className="mt-2 text-sm text-red-500">
                 {errors.dueDate.message}
               </p>
             )}
@@ -178,10 +189,10 @@ function CreateAssignment() {
 
           <Button
             type="submit"
-            disabled={isSubmitting}
+            disabled={createAssignmentMutation.isPending}
             className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? (
+            {createAssignmentMutation.isPending ? (
               <>
                 <LoadingSpinner className="h-5 w-5 text-white mr-2" />
                 Creating...

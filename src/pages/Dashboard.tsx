@@ -1,43 +1,26 @@
 import { useAuth } from "@/context/AuthContext";
-import { useEffect } from "react";
-import axiosInstance from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Loading } from "@/components/Loading";
-import {
-  dashboardStatsSchema,
-  type DashboardStats,
-  preprocessDashboardStats,
-} from "@/lib/validation";
-import { useApi } from "@/hooks/useApi";
-import { getData, getMessage } from "@/api/response";
+import { useDashboardStats } from "@/hooks/queries";
 
 function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  const {
-    data: stats,
-    loading,
-    execute: fetchStats,
-  } = useApi<DashboardStats>({
-    responseSchema: dashboardStatsSchema,
-  });
-  useEffect(() => {
-    fetchStats(async () => {
-      const res = await axiosInstance.get("/dashboard");
-      const extractedData = getData<unknown>(res);
-      const preprocessedData = preprocessDashboardStats(extractedData);
-      return {
-        data: preprocessedData,
-        message: getMessage(res) || "Dashboard stats retrieved successfully",
-      };
-    });
-  }, [fetchStats]);
+  const { data: stats, isLoading, isError, error } = useDashboardStats();
 
-  if (loading) {
+  if (isLoading) {
     return <Loading message="Loading dashboard data..." fullScreen />;
+  }
+
+  if (isError) {
+    return (
+      <div className="text-red-500 text-center">
+        Error loading dashboard: {error?.message}
+      </div>
+    );
   }
 
   return (
