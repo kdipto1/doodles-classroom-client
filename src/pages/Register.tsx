@@ -31,10 +31,10 @@ function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-12 px-4 sm:px-6 lg:px-8 pb-20 md:pb-12">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-zinc-800 p-6 sm:p-8 rounded-2xl shadow-xl">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-50">
+          <h2 className="mt-6 text-center text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-gray-50">
             Create your account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
@@ -42,70 +42,69 @@ function Register() {
           </p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
               <label
                 htmlFor="name"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
-                Name
+                Full Name
               </label>
-              <div className="mt-1">
-                <Input
-                  id="name"
-                  placeholder="Enter your name"
-                  {...register("name")}
-                  aria-invalid={errors.name ? "true" : "false"}
-                />
-                {errors.name && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {errors.name.message}
-                  </p>
-                )}
-              </div>
+              <Input
+                id="name"
+                placeholder="Enter your full name"
+                {...register("name")}
+                aria-invalid={errors.name ? "true" : "false"}
+                className="text-base"
+              />
+              {errors.name && (
+                <p className="mt-2 text-sm text-red-500">
+                  {errors.name.message}
+                </p>
+              )}
             </div>
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Email address
               </label>
-              <div className="mt-1">
-                <Input
-                  id="email"
-                  placeholder="Enter your email"
-                  {...register("email")}
-                  aria-invalid={errors.email ? "true" : "false"}
-                  autoComplete="email"
-                />
-                {errors.email && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {errors.email.message}
-                  </p>
-                )}
-              </div>
+              <Input
+                id="email"
+                placeholder="Enter your email"
+                {...register("email")}
+                aria-invalid={errors.email ? "true" : "false"}
+                autoComplete="email"
+                className="text-base"
+              />
+              {errors.email && (
+                <p className="mt-2 text-sm text-red-500">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
               >
                 Password
               </label>
-              <div className="mt-1 relative">
+              <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Enter your password"
+                  placeholder="Create a strong password"
                   {...register("password")}
                   aria-invalid={errors.password ? "true" : "false"}
                   autoComplete="new-password"
+                  className="text-base pr-12"
                 />
                 <button
                   type="button"
                   tabIndex={-1}
-                  className="absolute inset-y-0 right-2 flex items-center px-2 text-gray-500 hover:text-blue-600 focus:outline-none z-50 dark:text-gray-400 dark:hover:text-blue-500"
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-600 focus:outline-none z-50 dark:text-gray-400 dark:hover:text-blue-500 min-h-[44px] min-w-[44px]"
                   onClick={() => setShowPassword((prev) => !prev)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -141,16 +140,16 @@ function Register() {
                     </svg>
                   )}
                 </button>
-                {errors.password && (
-                  <p className="mt-2 text-sm text-red-500">
-                    {errors.password.message}
-                  </p>
-                )}
               </div>
+              {errors.password && (
+                <p className="mt-2 text-sm text-red-500">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
             <div>
-              <Label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Role
+              <Label className="mb-3 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                I am a...
               </Label>
               <Controller
                 name="role"
@@ -159,15 +158,21 @@ function Register() {
                   <RadioGroup
                     value={field.value}
                     onValueChange={field.onChange}
-                    className="flex items-center space-x-6 mt-1"
+                    className="grid grid-cols-2 gap-4"
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="student" id="r1" />
-                      <Label htmlFor="r1">Student</Label>
+                    <div className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[60px]">
+                      <RadioGroupItem value="student" id="r1" className="mt-0.5" />
+                      <div>
+                        <Label htmlFor="r1" className="font-medium cursor-pointer">Student</Label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Join classes and submit assignments</p>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="teacher" id="r2" />
-                      <Label htmlFor="r2">Teacher</Label>
+                    <div className="flex items-center space-x-3 p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors min-h-[60px]">
+                      <RadioGroupItem value="teacher" id="r2" className="mt-0.5" />
+                      <div>
+                        <Label htmlFor="r2" className="font-medium cursor-pointer">Teacher</Label>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Create classes and assignments</p>
+                      </div>
                     </div>
                   </RadioGroup>
                 )}
@@ -183,15 +188,16 @@ function Register() {
             <Button
               type="submit"
               disabled={registerMutation.isPending}
-              className="group relative w-full flex justify-center py-2.5 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              size="xl"
+              className="w-full text-base font-semibold"
             >
               {registerMutation.isPending ? (
                 <>
                   <LoadingSpinner className="h-5 w-5 text-white mr-2" />
-                  Registering...
+                  Creating account...
                 </>
               ) : (
-                "Register"
+                "Create Account"
               )}
             </Button>
           </div>

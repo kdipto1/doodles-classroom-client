@@ -8,6 +8,7 @@ const CreateClass = lazy(() => import("./pages/CreateClass"));
 const JoinClass = lazy(() => import("./pages/JoinClass"));
 const MyClasses = lazy(() => import("./pages/MyClasses"));
 const CreateAssignment = lazy(() => import("./pages/CreateAssignment"));
+const EditAssignment = lazy(() => import("./pages/EditAssignment"));
 const ClassAssignments = lazy(() => import("./pages/ClassAssignments"));
 const SubmitAssignment = lazy(() => import("./pages/SubmitAssignment"));
 const AssignmentSubmissions = lazy(() => import("./pages/AssignmentSubmissions"));
@@ -26,8 +27,8 @@ function App() {
     <ErrorBoundary>
       <BrowserRouter>
         <Navbar />
-        <main id="main-content">
-        <Suspense fallback={<Loading message="Loading..." fullScreen />}>        
+        <main id="main-content" className="pb-20 md:pb-0">
+        <Suspense fallback={<Loading message="Loading..." fullScreen />}>
         <Routes>
           <Route
             path="/"
@@ -77,6 +78,14 @@ function App() {
           element={
             <ProtectedRoute allowedRoles={["teacher"]}>
               <CreateAssignment />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assignments/:assignmentId/edit"
+          element={
+            <ProtectedRoute allowedRoles={["teacher"]}>
+              <EditAssignment />
             </ProtectedRoute>
           }
         />

@@ -87,6 +87,12 @@ export const assignmentSchema = z.object({
   }).optional(),
 });
 
+export const updateAssignmentSchema = z.object({
+  title: z.string().min(2, "Title must be at least 2 characters"),
+  description: z.string().optional(),
+  dueDate: z.string().optional(),
+});
+
 export const dashboardStatsSchema = z.object({
   classes: z.number(),
   assignments: z.number(),

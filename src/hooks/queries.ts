@@ -204,6 +204,43 @@ export const useCreateAssignmentMutation = () => {
   });
 };
 
+interface UpdateAssignmentData {
+  assignmentId: string;
+  title: string;
+  description?: string;
+  dueDate?: string;
+}
+
+export const useUpdateAssignmentMutation = () => {
+  const queryClient = useQueryClient();
+
+  return useToastMutation<Assignment, Error, UpdateAssignmentData>({
+    mutationFn: async ({ assignmentId, ...assignmentData }) => {
+      const response = await axiosInstance.patch(
+        `/assignments/${assignmentId}`,
+        assignmentData
+      );
+      return getData<Assignment>(response);
+    },
+    successMessage: "Assignment updated successfully!",
+    errorMessage: "Failed to update assignment",
+    onSuccess: (_data, variables) => {
+      // Invalidate the specific assignment
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.assignments.detail(variables.assignmentId),
+      });
+      // Invalidate all assignments to refresh lists
+      queryClient.invalidateQueries({
+        queryKey: invalidationKeys.assignments.all(),
+      });
+      // Also invalidate dashboard stats
+      queryClient.invalidateQueries({
+        queryKey: invalidationKeys.dashboard.all(),
+      });
+    },
+  });
+};
+
 // ============================================================================
 // SUBMISSION QUERIES
 // ============================================================================

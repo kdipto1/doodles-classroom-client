@@ -2,7 +2,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Loading } from "@/components/Loading";
+import { SkeletonDashboard } from "@/components/Skeleton";
 import { useDashboardStats } from "@/hooks/queries";
 
 function Dashboard() {
@@ -12,7 +12,7 @@ function Dashboard() {
   const { data: stats, isLoading, isError, error } = useDashboardStats();
 
   if (isLoading) {
-    return <Loading message="Loading dashboard data..." fullScreen />;
+    return <SkeletonDashboard />;
   }
 
   if (isError) {
@@ -24,16 +24,16 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-2 flex flex-col items-center">
-      <div className="w-full max-w-5xl space-y-8">
-        <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-6 sm:py-10 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+      <div className="w-full max-w-7xl space-y-6 sm:space-y-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-4">
           Welcome {user?.name}!{" "}
-          <span className="text-2xl" role="img" aria-label="wave">
+          <span className="text-xl sm:text-2xl" role="img" aria-label="wave">
             👋
           </span>
         </h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <Card className="flex flex-col items-center p-6 bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-950 dark:to-blue-900 border border-blue-200 dark:border-blue-800">
             <p className="text-sm text-blue-700 dark:text-blue-300 font-medium mb-2">
               {user?.role === "teacher" ? "Classes Created" : "Classes Joined"}
@@ -64,18 +64,20 @@ function Dashboard() {
           </Card>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 justify-center mt-8">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center mt-6 sm:mt-8 px-4">
           {user?.role === "teacher" ? (
             <>
               <Button
                 onClick={() => navigate("/classes/create")}
-                className="px-6 py-3"
+                size="lg"
+                className="w-full sm:w-auto px-6 py-3 text-base"
               >
                 + Create Class
               </Button>
               <Button
                 onClick={() => navigate("/assignments/create")}
-                className="px-6 py-3 bg-green-600 hover:bg-green-700"
+                size="lg"
+                className="w-full sm:w-auto px-6 py-3 bg-green-600 hover:bg-green-700 text-base"
               >
                 + New Assignment
               </Button>
@@ -83,7 +85,8 @@ function Dashboard() {
           ) : (
             <Button
               onClick={() => navigate("/classes/join")}
-              className="px-6 py-3"
+              size="lg"
+              className="w-full sm:w-auto px-6 py-3 text-base"
             >
               + Join Class
             </Button>
