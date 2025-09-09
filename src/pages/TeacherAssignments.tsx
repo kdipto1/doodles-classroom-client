@@ -271,23 +271,17 @@ function TeacherAssignments() {
                           View Submissions
                         </Button>
 
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() =>
-                            navigate("/assignments/create", {
-                              state: {
-                                classId: classData._id,
-                                title: classData.title,
-                                editId: assignment._id,
-                              },
-                            })
-                          }
-                          className="flex items-center gap-1"
-                        >
-                          <Edit className="h-3 w-3" />
-                          Edit
-                        </Button>
+                         <Button
+                           size="sm"
+                           variant="ghost"
+                           onClick={() =>
+                             navigate(`/assignments/${assignment._id}/edit`)
+                           }
+                           className="flex items-center gap-1"
+                         >
+                           <Edit className="h-3 w-3" />
+                           Edit
+                         </Button>
                       </div>
                     </div>
                   </Card>

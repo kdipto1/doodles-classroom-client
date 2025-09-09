@@ -242,12 +242,7 @@ const ViewAssignment = () => {
                 <Button
                   variant="outline"
                   onClick={() =>
-                    navigate("/assignments/create", {
-                      state: {
-                        classId: assignment.classId,
-                        editId: assignment._id,
-                      },
-                    })
+                    navigate(`/assignments/${assignment._id}/edit`)
                   }
                   className="flex items-center gap-2"
                   size="lg"

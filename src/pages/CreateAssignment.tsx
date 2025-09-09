@@ -4,7 +4,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "@/components/Loading";
@@ -91,8 +90,8 @@ function CreateAssignment() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-10 px-2">
-      <div className="max-w-lg w-full bg-white dark:bg-zinc-800 p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-700">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-zinc-900 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full bg-white dark:bg-zinc-800 p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-zinc-700">
         <h2 className="text-3xl font-extrabold text-gray-900 dark:text-gray-50 text-center mb-2">
           Create Assignment
         </h2>
@@ -103,7 +102,7 @@ function CreateAssignment() {
           <div>
             <label
               htmlFor="classId"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
             >
               Select Class
             </label>
@@ -111,7 +110,7 @@ function CreateAssignment() {
               id="classId"
               {...register("classId")}
               aria-invalid={errors.classId ? "true" : "false"}
-              className="w-full mt-1 rounded-md border border-input bg-background px-3 py-2 text-base placeholder:text-muted-foreground text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-zinc-700 dark:border-zinc-600"
+              className="w-full rounded-md border border-input bg-background px-3 py-3 text-base placeholder:text-muted-foreground text-foreground shadow-sm outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:bg-zinc-700 dark:border-zinc-600 min-h-[48px]"
             >
               <option value="">-- Choose a Class --</option>
               {classes.map((cls) => (

@@ -193,29 +193,30 @@ function AssignmentSubmissions() {
   const stats = getSubmissionStats();
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-10 px-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-6 sm:py-10 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Assignment Header */}
-        <Card className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 border-purple-200 dark:border-purple-800">
+        <Card className="p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950 border-purple-200 dark:border-purple-800">
           <div className="space-y-3">
-            <div className="flex items-start justify-between">
-              <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div className="space-y-2 flex-1">
                 <div className="flex items-center gap-3">
-                  <FileText className="h-6 w-6 text-purple-600 dark:text-purple-400" />
-                  <h1 className="text-2xl font-bold text-purple-900 dark:text-purple-100">
-                    {assignment.title} - Submissions
+                  <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600 dark:text-purple-400" />
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-900 dark:text-purple-100">
+                    {assignment.title}
                   </h1>
                 </div>
-                {assignment.description && (
-                  <p className="text-purple-700 dark:text-purple-300">
-                    {assignment.description}
-                  </p>
-                )}
+                <div className="text-sm text-purple-700 dark:text-purple-300">
+                  <span className="font-medium">Submissions</span>
+                  {assignment.description && (
+                    <span className="block sm:inline sm:ml-2">{assignment.description}</span>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <Badge
                   variant="secondary"
-                  className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200"
+                  className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 text-sm"
                 >
                   <Users className="h-4 w-4 mr-1" />
                   {stats.total} Submissions
@@ -235,28 +236,28 @@ function AssignmentSubmissions() {
         </Card>
 
         {/* Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="p-4 text-center bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
-            <div className="text-2xl font-bold text-blue-900 dark:text-blue-100">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <Card className="p-4 sm:p-6 text-center bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-900 dark:text-blue-100">
               {stats.total}
             </div>
-            <div className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="text-xs sm:text-sm text-blue-700 dark:text-blue-300">
               Total Submissions
             </div>
           </Card>
-          <Card className="p-4 text-center bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-            <div className="text-2xl font-bold text-green-900 dark:text-green-100">
+          <Card className="p-4 sm:p-6 text-center bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-900 dark:text-green-100">
               {stats.graded}
             </div>
-            <div className="text-sm text-green-700 dark:text-green-300">
+            <div className="text-xs sm:text-sm text-green-700 dark:text-green-300">
               Graded
             </div>
           </Card>
-          <Card className="p-4 text-center bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
-            <div className="text-2xl font-bold text-yellow-900 dark:text-yellow-100">
+          <Card className="p-4 sm:p-6 text-center bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800 sm:col-span-2 lg:col-span-1">
+            <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-yellow-900 dark:text-yellow-100">
               {stats.pending}
             </div>
-            <div className="text-sm text-yellow-700 dark:text-yellow-300">
+            <div className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-300">
               Pending Review
             </div>
           </Card>
